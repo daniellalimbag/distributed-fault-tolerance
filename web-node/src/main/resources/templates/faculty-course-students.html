@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="'Course ' + ${courseId} + ' Students'">Course Students</title>
+</head>
+<body>
+  <h1 th:text="'Course ' + ${courseId} + ' Students'"></h1>
+  <table border="1" cellspacing="0" cellpadding="6">
+    <thead>
+      <tr><th>Student ID</th><th>Grade</th><th>Edit</th></tr>
+    </thead>
+    <tbody>
+      <tr th:each="e : ${entries}">
+        <td th:text="${e.studentId}"></td>
+        <td>
+          <span th:if="${editStudent} != ${e.studentId}" th:text="${e.grade}"></span>
+          <form th:if="${editStudent} == ${e.studentId}" method="post" th:action="@{'/faculty/courses/' + ${courseId} + '/grade/' + ${e.studentId}}">
+            <input type="text" name="grade" th:placeholder="${e.grade}" />
+            <button type="submit">Save</button>
+            <a th:href="@{'/faculty/courses/' + ${courseId}}">Cancel</a>
+          </form>
+        </td>
+        <td>
+          <a th:if="${editStudent} != ${e.studentId}" th:href="@{'/faculty/courses/' + ${courseId} + '?editStudent=' + ${e.studentId}}">Edit</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p><a href="/faculty/courses">Back</a></p>
+</body>
+</html>

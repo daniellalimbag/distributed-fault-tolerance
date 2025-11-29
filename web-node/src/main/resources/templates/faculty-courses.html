@@ -2,13 +2,13 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8" />
-  <title>Courses</title>
+  <title>My Courses (Faculty)</title>
 </head>
 <body>
-  <h1>Available Courses</h1>
+  <h1>My Courses</h1>
   <table border="1" cellspacing="0" cellpadding="6">
     <thead>
-      <tr><th>ID</th><th>Name</th><th>Units</th><th>Lab</th><th>Faculty</th><th>Action</th></tr>
+      <tr><th>ID</th><th>Name</th><th>Units</th><th>Lab</th><th>Actions</th></tr>
     </thead>
     <tbody>
       <tr th:each="c : ${courses}">
@@ -16,16 +16,12 @@
         <td th:text="${c.name}"></td>
         <td th:text="${c.units}"></td>
         <td th:text="${c.laboratory}"></td>
-        <td th:text="${c.facultyId}"></td>
         <td>
-          <form method="post" action="/enroll">
-            <input type="hidden" name="courseId" th:value="${c.id}" />
-            <button type="submit">Enroll</button>
-          </form>
+          <a th:href="@{'/faculty/courses/' + ${c.id}}">View Students</a>
         </td>
       </tr>
     </tbody>
   </table>
-  <p><a href="/dashboard">Back</a></p>
+  <p><a href="/faculty/courses/create">Create Course</a> | <a href="/dashboard">Back</a></p>
 </body>
 </html>

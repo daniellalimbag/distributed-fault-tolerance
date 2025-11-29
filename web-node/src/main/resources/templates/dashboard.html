@@ -8,10 +8,14 @@
   <h1>Dashboard</h1>
   <p th:text="'Hello, ' + ${username}"></p>
   <p>Role: <span th:text="${role}"></span></p>
+  <div th:if="${role}=='STUDENT'">
+    <p>Enrollments: <strong th:text="${enrollmentCount}">0</strong></p>
+  </div>
   <nav>
-    <a href="/courses">Courses</a> |
+    <a href="/courses" th:if="${role}=='STUDENT'">Courses</a> |
     <a href="/grades" th:if="${role}=='STUDENT'">My Grades</a> |
-    <a href="/upload-grade" th:if="${role}=='FACULTY'">Upload Grade</a> |
+    <a href="/faculty/courses" th:if="${role}=='FACULTY'">My Courses</a> |
+    <a href="/faculty/courses/create" th:if="${role}=='FACULTY'">Create Course</a> |
     <a href="/logout">Logout</a>
   </nav>
 </body>

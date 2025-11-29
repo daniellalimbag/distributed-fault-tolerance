@@ -1,6 +1,9 @@
 # Gradle and build outputs
 .gradle/
-**/build/
+# Ignore all build outputs except bootJar JARs
+**/build/*
+!api-node/build/libs/*.jar
+!web-node/build/libs/*.jar
 
 # Git
 .git/

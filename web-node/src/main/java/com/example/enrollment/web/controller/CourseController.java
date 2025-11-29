@@ -24,7 +24,9 @@ public class CourseController {
     private EnrollmentServiceGrpc.EnrollmentServiceBlockingStub enrollmentStub;
 
     @GetMapping("/courses")
-    public String listCourses(Model model) {
+    public String listCourses(Model model, HttpSession session) {
+        Object role = session.getAttribute("role");
+        if (role != null && "FACULTY".equals(role.toString())) return "redirect:/dashboard";
         var response = courseStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                 .listCourses(ListCoursesRequest.newBuilder().build());
         model.addAttribute("courses", response.getCoursesList());
@@ -34,6 +36,8 @@ public class CourseController {
     @PostMapping("/enroll")
     public String enroll(@RequestParam String courseId, HttpSession session) {
         String studentId = String.valueOf(session.getAttribute("username"));
+        Object role = session.getAttribute("role");
+        if (role != null && "FACULTY".equals(role.toString())) return "redirect:/dashboard";
         if (studentId == null) return "redirect:/login";
         enrollmentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                 .enroll(EnrollRequest.newBuilder().setStudentId(studentId).setCourseId(courseId).build());

@@ -3,6 +3,7 @@ package com.example.enrollment.web.controller;
 import com.example.enrollment.grpc.GetGradesRequest;
 import com.example.enrollment.grpc.GradesServiceGrpc;
 import com.example.enrollment.grpc.UploadGradeRequest;
+import com.example.enrollment.grpc.StudentServiceGrpc;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,23 +20,24 @@ public class GradesController {
     @GrpcClient("api")
     private GradesServiceGrpc.GradesServiceBlockingStub gradesStub;
 
+    @GrpcClient("api")
+    private StudentServiceGrpc.StudentServiceBlockingStub studentStub;
+
     @GetMapping("/grades")
     public String viewGrades(HttpSession session, Model model) {
         String studentId = String.valueOf(session.getAttribute("username"));
         Object role = session.getAttribute("role");
         if (role == null || !"STUDENT".equals(role.toString())) return "redirect:/dashboard";
         if (studentId == null) return "redirect:/login";
-        var resp = gradesStub.withDeadlineAfter(3, TimeUnit.SECONDS)
-                .getGrades(GetGradesRequest.newBuilder().setStudentId(studentId).build());
-        model.addAttribute("grades", resp.getGradesList());
+        var resp = studentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                .getStudentOverview(GetGradesRequest.newBuilder().setStudentId(studentId).build());
+        model.addAttribute("grades", resp.getEntriesList());
         return "grades";
     }
 
     @GetMapping("/upload-grade")
     public String uploadGradeForm(HttpSession session, Model model) {
-        Object role = session.getAttribute("role");
-        if (role == null || !"FACULTY".equals(role.toString())) return "redirect:/dashboard";
-        return "upload";
+        return "redirect:/dashboard";
     }
 
     @PostMapping("/upload-grade")
@@ -43,14 +45,6 @@ public class GradesController {
                            @RequestParam String courseId,
                            @RequestParam String grade,
                            HttpSession session) {
-        Object role = session.getAttribute("role");
-        if (role == null || !"FACULTY".equals(role.toString())) return "redirect:/dashboard";
-        gradesStub.withDeadlineAfter(3, TimeUnit.SECONDS)
-                .uploadGrade(UploadGradeRequest.newBuilder()
-                .setStudentId(studentId)
-                .setCourseId(courseId)
-                .setGrade(grade)
-                .build());
-        return "redirect:/grades";
+        return "redirect:/dashboard";
     }
 }

@@ -10,7 +10,6 @@ import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import io.grpc.Context;
 import io.grpc.Metadata;
 import io.grpc.Status;
@@ -18,7 +17,11 @@ import com.example.enrollment.security.ContextKeys;
 
 @GrpcService
 public class GradesServiceImpl extends GradesServiceGrpc.GradesServiceImplBase {
-    private final Map<String, List<GradeEntry>> grades = new ConcurrentHashMap<>();
+    private final EnrollmentStore store;
+
+    public GradesServiceImpl(EnrollmentStore store) {
+        this.store = store;
+    }
 
     @Override
     public void getGrades(GetGradesRequest request, StreamObserver<GetGradesResponse> responseObserver) {
@@ -28,7 +31,7 @@ public class GradesServiceImpl extends GradesServiceGrpc.GradesServiceImplBase {
             responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Students can only view their own grades").asRuntimeException());
             return;
         }
-        List<GradeEntry> list = grades.getOrDefault(request.getStudentId(), Collections.emptyList());
+        List<GradeEntry> list = store.getGrades().getOrDefault(request.getStudentId(), Collections.emptyList());
         responseObserver.onNext(GetGradesResponse.newBuilder().addAllGrades(list).build());
         responseObserver.onCompleted();
     }
@@ -40,7 +43,7 @@ public class GradesServiceImpl extends GradesServiceGrpc.GradesServiceImplBase {
             responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Only faculty can upload grades").asRuntimeException());
             return;
         }
-        grades.computeIfAbsent(request.getStudentId(), k -> Collections.synchronizedList(new ArrayList<>()))
+        store.getGrades().computeIfAbsent(request.getStudentId(), k -> Collections.synchronizedList(new ArrayList<>()))
                 .add(GradeEntry.newBuilder()
                         .setCourseId(request.getCourseId())
                         .setCourseName(request.getCourseId())
