@@ -2,17 +2,37 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Create Course (Faculty)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>Create Course</h1>
-  <form method="post" action="/faculty/courses/create">
-    <label>Course ID <input type="text" name="id" required></label><br/>
-    <label>Name <input type="text" name="name" required></label><br/>
-    <label>Units <input type="number" name="units" value="3" min="1" max="6" required></label><br/>
-    <label>Laboratory <input type="checkbox" name="laboratory"></label><br/>
-    <button type="submit">Create</button>
-  </form>
-  <p><a href="/dashboard">Back</a></p>
+<body class="min-h-screen bg-gray-50">
+  <div class="max-w-lg mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-semibold text-gray-900">Create Course</h1>
+      <a href="/dashboard" class="text-sm text-gray-600 hover:text-indigo-600">Back</a>
+    </div>
+    <div class="bg-white shadow rounded-xl p-6">
+      <form method="post" action="/faculty/courses/create" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Course ID</label>
+          <input type="text" name="id" required class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input type="text" name="name" required class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Units</label>
+          <input type="number" name="units" value="3" min="1" max="6" required class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+        </div>
+        <div class="flex items-center">
+          <input id="lab" type="checkbox" name="laboratory" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+          <label for="lab" class="ml-2 block text-sm text-gray-700">Laboratory</label>
+        </div>
+        <button type="submit" class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2.5 text-white font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Create</button>
+      </form>
+    </div>
+  </div>
 </body>
 </html>

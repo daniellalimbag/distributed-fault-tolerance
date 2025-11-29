@@ -2,22 +2,36 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>My Grades</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>My Grades</h1>
-  <table border="1" cellspacing="0" cellpadding="6">
-    <thead>
-      <tr><th>Course ID</th><th>Course Name</th><th>Grade</th></tr>
-    </thead>
-    <tbody>
-      <tr th:each="g : ${grades}">
-        <td th:text="${g.courseId}"></td>
-        <td th:text="${g.courseName}"></td>
-        <td th:text="${g.grade}"></td>
-      </tr>
-    </tbody>
-  </table>
-  <p><a href="/dashboard">Back</a></p>
+<body class="min-h-screen bg-gray-50">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-semibold text-gray-900">My Grades</h1>
+      <a href="/dashboard" class="text-sm text-gray-600 hover:text-indigo-600">Back</a>
+    </div>
+    <div class="bg-white shadow rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course ID</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Name</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-100">
+            <tr th:each="g : ${grades}">
+              <td class="px-4 py-3 text-sm text-gray-900" th:text="${g.courseId}"></td>
+              <td class="px-4 py-3 text-sm text-gray-700" th:text="${g.courseName}"></td>
+              <td class="px-4 py-3 text-sm font-medium" th:text="${g.grade}"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

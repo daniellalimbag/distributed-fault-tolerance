@@ -2,31 +2,45 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title th:text="'Course ' + ${courseId} + ' Students'">Course Students</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1 th:text="'Course ' + ${courseId} + ' Students'"></h1>
-  <table border="1" cellspacing="0" cellpadding="6">
-    <thead>
-      <tr><th>Student ID</th><th>Grade</th><th>Edit</th></tr>
-    </thead>
-    <tbody>
-      <tr th:each="e : ${entries}">
-        <td th:text="${e.studentId}"></td>
-        <td>
-          <span th:if="${editStudent} != ${e.studentId}" th:text="${e.grade}"></span>
-          <form th:if="${editStudent} == ${e.studentId}" method="post" th:action="@{'/faculty/courses/' + ${courseId} + '/grade/' + ${e.studentId}}">
-            <input type="text" name="grade" th:placeholder="${e.grade}" />
-            <button type="submit">Save</button>
-            <a th:href="@{'/faculty/courses/' + ${courseId}}">Cancel</a>
-          </form>
-        </td>
-        <td>
-          <a th:if="${editStudent} != ${e.studentId}" th:href="@{'/faculty/courses/' + ${courseId} + '?editStudent=' + ${e.studentId}}">Edit</a>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <p><a href="/faculty/courses">Back</a></p>
+<body class="min-h-screen bg-gray-50">
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-semibold text-gray-900" th:text="'Course ' + ${courseId} + ' Students'"></h1>
+      <a href="/faculty/courses" class="text-sm text-gray-600 hover:text-indigo-600">Back</a>
+    </div>
+    <div class="bg-white shadow rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-100">
+            <tr th:each="e : ${entries}">
+              <td class="px-4 py-3 text-sm text-gray-900" th:text="${e.studentId}"></td>
+              <td class="px-4 py-3">
+                <span class="text-sm" th:if="${editStudent} != ${e.studentId}" th:text="${e.grade}"></span>
+                <form class="flex items-center space-x-2" th:if="${editStudent} == ${e.studentId}" method="post" th:action="@{'/faculty/courses/' + ${courseId} + '/grade/' + ${e.studentId}}">
+                  <input type="text" name="grade" th:placeholder="${e.grade}" class="rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm" />
+                  <button type="submit" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-white text-sm hover:bg-indigo-700">Save</button>
+                  <a th:href="@{'/faculty/courses/' + ${courseId}}" class="text-sm text-gray-600 hover:text-indigo-600">Cancel</a>
+                </form>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <a th:if="${editStudent} != ${e.studentId}" th:href="@{'/faculty/courses/' + ${courseId} + '?editStudent=' + ${e.studentId}}" class="inline-flex items-center rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-200">Edit</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

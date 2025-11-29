@@ -2,21 +2,45 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>Dashboard</h1>
-  <p th:text="'Hello, ' + ${username}"></p>
-  <p>Role: <span th:text="${role}"></span></p>
-  <div th:if="${role}=='STUDENT'">
-    <p>Enrollments: <strong th:text="${enrollmentCount}">0</strong></p>
-  </div>
-  <nav>
-    <a href="/courses" th:if="${role}=='STUDENT'">Courses</a> |
-    <a href="/grades" th:if="${role}=='STUDENT'">My Grades</a> |
-    <a href="/faculty/courses" th:if="${role}=='FACULTY'">My Courses</a> |
-    <a href="/faculty/courses/create" th:if="${role}=='FACULTY'">Create Course</a> |
-    <a href="/logout">Logout</a>
-  </nav>
+<body class="min-h-screen bg-gray-50">
+  <header class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-xl font-semibold text-gray-900">Enrollment Dashboard</h1>
+      <nav class="space-x-3 text-sm">
+        <a href="/courses" class="text-gray-700 hover:text-indigo-600" th:if="${role}=='STUDENT'">Courses</a>
+        <a href="/grades" class="text-gray-700 hover:text-indigo-600" th:if="${role}=='STUDENT'">My Grades</a>
+        <a href="/faculty/courses" class="text-gray-700 hover:text-indigo-600" th:if="${role}=='FACULTY'">My Courses</a>
+        <a href="/faculty/courses/create" class="text-gray-700 hover:text-indigo-600" th:if="${role}=='FACULTY'">Create Course</a>
+        <a href="/logout" class="text-red-600 hover:text-red-700">Logout</a>
+      </nav>
+    </div>
+  </header>
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <div class="bg-white shadow rounded-xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500">Signed in as</p>
+          <p class="text-lg font-medium text-gray-900" th:text="${username}"></p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm text-gray-500">Role</p>
+          <p class="text-lg font-medium text-gray-900" th:text="${role}"></p>
+        </div>
+      </div>
+      <div class="mt-6" th:if="${role}=='STUDENT'">
+        <div class="rounded-lg border p-4 flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500">Enrollments</p>
+            <p class="text-2xl font-semibold text-gray-900" th:text="${enrollmentCount}">0</p>
+          </div>
+          <a href="/grades" class="inline-flex items-center rounded-md bg-[#206b28] px-4 py-2 text-white hover:brightness-95">My Grades</a>
+        </div>
+      </div>
+    </div>
+  </main>
 </body>
 </html>
