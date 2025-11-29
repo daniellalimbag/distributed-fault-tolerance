@@ -17,10 +17,10 @@ import java.util.concurrent.TimeUnit;
 @Controller
 public class GradesController {
 
-    @GrpcClient("api")
+    @GrpcClient("grade")
     private GradesServiceGrpc.GradesServiceBlockingStub gradesStub;
 
-    @GrpcClient("api")
+    @GrpcClient("course")
     private StudentServiceGrpc.StudentServiceBlockingStub studentStub;
 
     @GetMapping("/grades")

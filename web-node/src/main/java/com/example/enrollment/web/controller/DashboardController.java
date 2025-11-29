@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 @Controller
 public class DashboardController {
 
-    @GrpcClient("api")
+    @GrpcClient("course")
     private StudentServiceGrpc.StudentServiceBlockingStub studentStub;
 
     @GetMapping({"/", "/dashboard"})

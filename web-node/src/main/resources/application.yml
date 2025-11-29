@@ -6,6 +6,12 @@ server:
 
 grpc:
   client:
-    api:
-      address: ${API_ADDRESS:static://api-node:9090}
+    authEnroll:
+      address: ${AUTH_ENROLL_ADDRESS:static://auth-enrollment-service:9091}
+      negotiationType: PLAINTEXT
+    course:
+      address: ${COURSE_ADDRESS:static://course-service:9092}
+      negotiationType: PLAINTEXT
+    grade:
+      address: ${GRADE_ADDRESS:static://grade-service:9093}
       negotiationType: PLAINTEXT

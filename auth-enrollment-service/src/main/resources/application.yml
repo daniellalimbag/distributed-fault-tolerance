@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: auth-enrollment-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/enrollment}
+    username: ${SPRING_DATASOURCE_USERNAME:enrollment}
+    password: ${SPRING_DATASOURCE_PASSWORD:enrollment}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
+  flyway:
+    enabled: ${SPRING_FLYWAY_ENABLED:true}
+server:
+  port: 8082
+
+grpc:
+  server:
+    port: 9091

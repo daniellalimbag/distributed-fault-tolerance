@@ -1,21 +1,4 @@
 services:
-  api-node:
-    build:
-      context: .
-      dockerfile: api-node/Dockerfile
-    image: enrollment-api:latest
-    ports:
-      - "8081:8081"
-      - "9090:9090"
-    environment:
-      - JAVA_OPTS=
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/enrollment
-      - SPRING_DATASOURCE_USERNAME=enrollment
-      - SPRING_DATASOURCE_PASSWORD=enrollment
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
-      - SPRING_JPA_SHOW_SQL=false
-      - SPRING_FLYWAY_ENABLED=true
-
   web-node:
     build:
       context: .
@@ -25,9 +8,71 @@ services:
       - "8080:8080"
     environment:
       - JAVA_OPTS=
-      - API_ADDRESS=static://api-node:9090
+      - LOGGING_LEVEL_COM_EXAMPLE_ENROLLMENT_WEB_GRPC=DEBUG
     depends_on:
-      - api-node
+      - auth-enrollment-service
+      - course-service
+      - grade-service
+      - postgres
+
+  auth-enrollment-service:
+    build:
+      context: ./auth-enrollment-service
+      dockerfile: Dockerfile
+    image: auth-enrollment-service:latest
+    ports:
+      - "8082:8082"
+      - "9091:9091"
+    environment:
+      - JAVA_OPTS=
+      - JWT_SECRET=dev-shared-secret-0123456789abcdef-0123456789abcdef-01234567
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/enrollment
+      - SPRING_DATASOURCE_USERNAME=enrollment
+      - SPRING_DATASOURCE_PASSWORD=enrollment
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_JPA_SHOW_SQL=false
+      - SPRING_FLYWAY_ENABLED=false
+    depends_on:
+      - postgres
+
+  course-service:
+    build:
+      context: ./course-service
+      dockerfile: Dockerfile
+    image: course-service:latest
+    ports:
+      - "8083:8083"
+      - "9092:9092"
+    environment:
+      - JAVA_OPTS=
+      - JWT_SECRET=dev-shared-secret-0123456789abcdef-0123456789abcdef-01234567
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/enrollment
+      - SPRING_DATASOURCE_USERNAME=enrollment
+      - SPRING_DATASOURCE_PASSWORD=enrollment
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_JPA_SHOW_SQL=false
+      - SPRING_FLYWAY_ENABLED=false
+    depends_on:
+      - postgres
+
+  grade-service:
+    build:
+      context: ./grade-service
+      dockerfile: Dockerfile
+    image: grade-service:latest
+    ports:
+      - "8084:8084"
+      - "9093:9093"
+    environment:
+      - JAVA_OPTS=
+      - JWT_SECRET=dev-shared-secret-0123456789abcdef-0123456789abcdef-01234567
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/enrollment
+      - SPRING_DATASOURCE_USERNAME=enrollment
+      - SPRING_DATASOURCE_PASSWORD=enrollment
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_JPA_SHOW_SQL=false
+      - SPRING_FLYWAY_ENABLED=false
+    depends_on:
       - postgres
 
   postgres:

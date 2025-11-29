@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 @Controller
 public class AuthController {
 
-    @GrpcClient("api")
+    @GrpcClient("authEnroll")
     private AuthServiceGrpc.AuthServiceBlockingStub authStub;
 
     @GetMapping("/login")

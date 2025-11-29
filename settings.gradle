@@ -1,2 +1,2 @@
 rootProject.name = 'enrollment-grpc'
-include 'api-node', 'web-node'
+include 'web-node', 'auth-enrollment-service', 'course-service', 'grade-service'

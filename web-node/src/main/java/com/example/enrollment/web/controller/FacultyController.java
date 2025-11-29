@@ -19,13 +19,13 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/faculty")
 public class FacultyController {
 
-    @GrpcClient("api")
+    @GrpcClient("course")
     private CourseServiceGrpc.CourseServiceBlockingStub courseStub;
 
-    @GrpcClient("api")
+    @GrpcClient("authEnroll")
     private EnrollmentServiceGrpc.EnrollmentServiceBlockingStub enrollmentStub;
 
-    @GrpcClient("api")
+    @GrpcClient("grade")
     private GradesServiceGrpc.GradesServiceBlockingStub gradesStub;
 
     private boolean isFaculty(HttpSession session) {
