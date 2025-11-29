@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Courses</title>
+</head>
+<body>
+  <h1>Available Courses</h1>
+  <table border="1" cellspacing="0" cellpadding="6">
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Units</th><th>Lab</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      <tr th:each="c : ${courses}">
+        <td th:text="${c.id}"></td>
+        <td th:text="${c.name}"></td>
+        <td th:text="${c.units}"></td>
+        <td th:text="${c.laboratory}"></td>
+        <td>
+          <form method="post" action="/enroll">
+            <input type="hidden" name="courseId" th:value="${c.id}" />
+            <button type="submit">Enroll</button>
+          </form>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p><a href="/dashboard">Back</a></p>
+</body>
+</html>

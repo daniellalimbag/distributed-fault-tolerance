@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Grades</title>
+</head>
+<body>
+  <h1>My Grades</h1>
+  <table border="1" cellspacing="0" cellpadding="6">
+    <thead>
+      <tr><th>Course ID</th><th>Course Name</th><th>Grade</th></tr>
+    </thead>
+    <tbody>
+      <tr th:each="g : ${grades}">
+        <td th:text="${g.courseId}"></td>
+        <td th:text="${g.courseName}"></td>
+        <td th:text="${g.grade}"></td>
+      </tr>
+    </tbody>
+  </table>
+  <p><a href="/dashboard">Back</a></p>
+</body>
+</html>

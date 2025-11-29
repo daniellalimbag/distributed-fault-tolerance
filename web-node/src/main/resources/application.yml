@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: web-node
+server:
+  port: 8080
+
+grpc:
+  client:
+    api:
+      address: 'static://localhost:9090'
+      negotiationType: PLAINTEXT
