@@ -11,6 +11,10 @@ import net.devh.boot.grpc.server.service.GrpcService;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import io.grpc.Context;
+import io.grpc.Metadata;
+import io.grpc.Status;
+import com.example.enrollment.security.ContextKeys;
 
 @GrpcService
 public class GradesServiceImpl extends GradesServiceGrpc.GradesServiceImplBase {
@@ -18,6 +22,12 @@ public class GradesServiceImpl extends GradesServiceGrpc.GradesServiceImplBase {
 
     @Override
     public void getGrades(GetGradesRequest request, StreamObserver<GetGradesResponse> responseObserver) {
+        String role = ContextKeys.ROLE.get(Context.current());
+        String subject = ContextKeys.SUBJECT.get(Context.current());
+        if (!"STUDENT".equals(role) || !request.getStudentId().equals(subject)) {
+            responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Students can only view their own grades").asRuntimeException());
+            return;
+        }
         List<GradeEntry> list = grades.getOrDefault(request.getStudentId(), Collections.emptyList());
         responseObserver.onNext(GetGradesResponse.newBuilder().addAllGrades(list).build());
         responseObserver.onCompleted();
@@ -25,6 +35,11 @@ public class GradesServiceImpl extends GradesServiceGrpc.GradesServiceImplBase {
 
     @Override
     public void uploadGrade(UploadGradeRequest request, StreamObserver<UploadGradeResponse> responseObserver) {
+        String role = ContextKeys.ROLE.get(Context.current());
+        if (!"FACULTY".equals(role)) {
+            responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Only faculty can upload grades").asRuntimeException());
+            return;
+        }
         grades.computeIfAbsent(request.getStudentId(), k -> Collections.synchronizedList(new ArrayList<>()))
                 .add(GradeEntry.newBuilder()
                         .setCourseId(request.getCourseId())

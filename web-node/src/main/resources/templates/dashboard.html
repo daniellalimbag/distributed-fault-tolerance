@@ -10,7 +10,7 @@
   <p>Role: <span th:text="${role}"></span></p>
   <nav>
     <a href="/courses">Courses</a> |
-    <a href="/grades">My Grades</a> |
+    <a href="/grades" th:if="${role}=='STUDENT'">My Grades</a> |
     <a href="/upload-grade" th:if="${role}=='FACULTY'">Upload Grade</a> |
     <a href="/logout">Logout</a>
   </nav>

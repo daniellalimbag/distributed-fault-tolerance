@@ -15,6 +15,8 @@ public class GlobalExceptionHandler {
         switch (code) {
             case UNAUTHENTICATED:
                 return "redirect:/login";
+            case PERMISSION_DENIED:
+                return "redirect:/dashboard";
             case UNAVAILABLE:
             case DEADLINE_EXCEEDED:
                 model.addAttribute("title", "Service unavailable");

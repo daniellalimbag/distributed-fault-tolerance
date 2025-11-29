@@ -22,6 +22,8 @@ public class GradesController {
     @GetMapping("/grades")
     public String viewGrades(HttpSession session, Model model) {
         String studentId = String.valueOf(session.getAttribute("username"));
+        Object role = session.getAttribute("role");
+        if (role == null || !"STUDENT".equals(role.toString())) return "redirect:/dashboard";
         if (studentId == null) return "redirect:/login";
         var resp = gradesStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                 .getGrades(GetGradesRequest.newBuilder().setStudentId(studentId).build());
@@ -39,7 +41,10 @@ public class GradesController {
     @PostMapping("/upload-grade")
     public String doUpload(@RequestParam String studentId,
                            @RequestParam String courseId,
-                           @RequestParam String grade) {
+                           @RequestParam String grade,
+                           HttpSession session) {
+        Object role = session.getAttribute("role");
+        if (role == null || !"FACULTY".equals(role.toString())) return "redirect:/dashboard";
         gradesStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                 .uploadGrade(UploadGradeRequest.newBuilder()
                 .setStudentId(studentId)
