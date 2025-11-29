@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
+import java.util.concurrent.TimeUnit;
 
 @Controller
 public class AuthController {
@@ -28,7 +29,8 @@ public class AuthController {
                           @RequestParam String password,
                           HttpSession session,
                           Model model) {
-        var resp = authStub.login(LoginRequest.newBuilder().setUsername(username).setPassword(password).build());
+        var resp = authStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                .login(LoginRequest.newBuilder().setUsername(username).setPassword(password).build());
         session.setAttribute("token", resp.getToken());
         session.setAttribute("username", username);
         session.setAttribute("role", resp.getRole());
@@ -39,7 +41,8 @@ public class AuthController {
     public String logout(HttpSession session) {
         Object token = session.getAttribute("token");
         if (token != null) {
-            authStub.logout(LogoutRequest.newBuilder().setToken(token.toString()).build());
+            authStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                    .logout(LogoutRequest.newBuilder().setToken(token.toString()).build());
         }
         session.invalidate();
         return "redirect:/login";

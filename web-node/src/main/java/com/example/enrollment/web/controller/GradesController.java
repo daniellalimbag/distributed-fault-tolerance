@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
+import java.util.concurrent.TimeUnit;
 
 @Controller
 public class GradesController {
@@ -22,7 +23,8 @@ public class GradesController {
     public String viewGrades(HttpSession session, Model model) {
         String studentId = String.valueOf(session.getAttribute("username"));
         if (studentId == null) return "redirect:/login";
-        var resp = gradesStub.getGrades(GetGradesRequest.newBuilder().setStudentId(studentId).build());
+        var resp = gradesStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                .getGrades(GetGradesRequest.newBuilder().setStudentId(studentId).build());
         model.addAttribute("grades", resp.getGradesList());
         return "grades";
     }
@@ -38,7 +40,8 @@ public class GradesController {
     public String doUpload(@RequestParam String studentId,
                            @RequestParam String courseId,
                            @RequestParam String grade) {
-        gradesStub.uploadGrade(UploadGradeRequest.newBuilder()
+        gradesStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                .uploadGrade(UploadGradeRequest.newBuilder()
                 .setStudentId(studentId)
                 .setCourseId(courseId)
                 .setGrade(grade)
