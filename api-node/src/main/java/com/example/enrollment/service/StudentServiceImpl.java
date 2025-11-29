@@ -11,20 +11,20 @@ import net.devh.boot.grpc.server.service.GrpcService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
 import static com.example.enrollment.security.ContextKeys.ROLE;
 import static com.example.enrollment.security.ContextKeys.SUBJECT;
+import com.example.enrollment.data.EnrollmentRepository;
+import com.example.enrollment.data.CourseRepository;
 
 @GrpcService
 public class StudentServiceImpl extends StudentServiceGrpc.StudentServiceImplBase {
 
-    private final EnrollmentStore store;
-    private final CourseServiceImpl courseService;
+    private final EnrollmentRepository enrollments;
+    private final CourseRepository courses;
 
-    public StudentServiceImpl(EnrollmentStore store, CourseServiceImpl courseService) {
-        this.store = store;
-        this.courseService = courseService;
+    public StudentServiceImpl(EnrollmentRepository enrollments, CourseRepository courses) {
+        this.enrollments = enrollments;
+        this.courses = courses;
     }
 
     @Override
@@ -35,21 +35,16 @@ public class StudentServiceImpl extends StudentServiceGrpc.StudentServiceImplBas
             responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Students can only view their own overview").asRuntimeException());
             return;
         }
-        Set<String> enrolled = store.getEnrollments().getOrDefault(request.getStudentId(), java.util.Collections.emptySet());
-        List<GradeEntry> grades = store.getGrades().getOrDefault(request.getStudentId(), java.util.Collections.emptyList());
         List<GradeEntry> entries = new ArrayList<>();
-        for (String courseId : enrolled) {
-            String courseName = courseService.findById(courseId).map(c -> c.getName()).orElse(courseId);
-            String gradeVal = "NGS";
-            for (GradeEntry g : grades) {
-                if (g.getCourseId().equals(courseId)) { gradeVal = g.getGrade(); break; }
-            }
+        enrollments.findByStudentId(request.getStudentId()).forEach(en -> {
+            String courseName = courses.findById(en.getCourseId()).map(c -> c.getName()).orElse(en.getCourseId());
+            String gradeVal = en.getGrade() == null ? "NGS" : en.getGrade();
             entries.add(GradeEntry.newBuilder()
-                    .setCourseId(courseId)
+                    .setCourseId(en.getCourseId())
                     .setCourseName(courseName)
                     .setGrade(gradeVal)
                     .build());
-        }
+        });
         responseObserver.onNext(GetStudentOverviewResponse.newBuilder().addAllEntries(entries).build());
         responseObserver.onCompleted();
     }

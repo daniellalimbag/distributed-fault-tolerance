@@ -9,6 +9,12 @@ services:
       - "9090:9090"
     environment:
       - JAVA_OPTS=
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/enrollment
+      - SPRING_DATASOURCE_USERNAME=enrollment
+      - SPRING_DATASOURCE_PASSWORD=enrollment
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_JPA_SHOW_SQL=false
+      - SPRING_FLYWAY_ENABLED=true
 
   web-node:
     build:
@@ -22,3 +28,18 @@ services:
       - API_ADDRESS=static://api-node:9090
     depends_on:
       - api-node
+      - postgres
+
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=enrollment
+      - POSTGRES_USER=enrollment
+      - POSTGRES_PASSWORD=enrollment
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

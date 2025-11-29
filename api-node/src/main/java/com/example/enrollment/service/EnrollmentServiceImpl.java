@@ -6,28 +6,31 @@ import com.example.enrollment.grpc.EnrollmentServiceGrpc;
 import com.example.enrollment.grpc.ListStudentsInCourseRequest;
 import com.example.enrollment.grpc.ListStudentsInCourseResponse;
 import com.example.enrollment.grpc.StudentCourseGrade;
+import com.example.enrollment.data.EnrollmentEntity;
+import com.example.enrollment.data.EnrollmentId;
+import com.example.enrollment.data.EnrollmentRepository;
+import com.example.enrollment.data.CourseRepository;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import io.grpc.Context;
 import io.grpc.Status;
 import com.example.enrollment.security.ContextKeys;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @GrpcService
 public class EnrollmentServiceImpl extends EnrollmentServiceGrpc.EnrollmentServiceImplBase {
-    private final EnrollmentStore store;
-    private final CourseServiceImpl courseService;
+    private final EnrollmentRepository enrollments;
+    private final CourseRepository courses;
 
-    public EnrollmentServiceImpl(EnrollmentStore store, CourseServiceImpl courseService) {
-        this.store = store;
-        this.courseService = courseService;
+    public EnrollmentServiceImpl(EnrollmentRepository enrollments, CourseRepository courses) {
+        this.enrollments = enrollments;
+        this.courses = courses;
     }
 
     @Override
+    @Transactional
     public void enroll(EnrollRequest request, StreamObserver<EnrollResponse> responseObserver) {
         String role = ContextKeys.ROLE.get(Context.current());
         String subject = ContextKeys.SUBJECT.get(Context.current());
@@ -35,8 +38,12 @@ public class EnrollmentServiceImpl extends EnrollmentServiceGrpc.EnrollmentServi
             responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Only the student can enroll themselves").asRuntimeException());
             return;
         }
-        store.getEnrollments().computeIfAbsent(request.getStudentId(), k -> ConcurrentHashMap.newKeySet())
-                .add(request.getCourseId());
+        if (!courses.existsById(request.getCourseId())) {
+            responseObserver.onError(Status.NOT_FOUND.withDescription("Course not found").asRuntimeException());
+            return;
+        }
+        EnrollmentId id = new EnrollmentId(request.getStudentId(), request.getCourseId());
+        enrollments.findById(id).orElseGet(() -> enrollments.save(new EnrollmentEntity(request.getStudentId(), request.getCourseId(), null)));
         responseObserver.onNext(EnrollResponse.newBuilder().setSuccess(true).setMessage("Enrolled").build());
         responseObserver.onCompleted();
     }
@@ -49,26 +56,15 @@ public class EnrollmentServiceImpl extends EnrollmentServiceGrpc.EnrollmentServi
             responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Only faculty can list students").asRuntimeException());
             return;
         }
-        String owner = courseService.getFacultyOfCourse(request.getCourseId());
+        var owner = courses.findById(request.getCourseId()).map(e -> e.getFacultyId()).orElse(null);
         if (owner == null || !owner.equals(facultyId)) {
             responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Not owner of course").asRuntimeException());
             return;
         }
         List<StudentCourseGrade> entries = new ArrayList<>();
-        store.getEnrollments().forEach((student, courseSet) -> {
-            if (courseSet.contains(request.getCourseId())) {
-                String gradeVal = "null";
-                var list = store.getGrades().get(student);
-                if (list != null) {
-                    for (var g : list) {
-                        if (g.getCourseId().equals(request.getCourseId())) { gradeVal = g.getGrade(); break; }
-                    }
-                }
-                entries.add(StudentCourseGrade.newBuilder()
-                        .setStudentId(student)
-                        .setGrade(gradeVal)
-                        .build());
-            }
+        enrollments.findByCourseId(request.getCourseId()).forEach(en -> {
+            String gradeVal = en.getGrade() == null ? "null" : en.getGrade();
+            entries.add(StudentCourseGrade.newBuilder().setStudentId(en.getStudentId()).setGrade(gradeVal).build());
         });
         responseObserver.onNext(ListStudentsInCourseResponse.newBuilder().addAllEntries(entries).build());
         responseObserver.onCompleted();

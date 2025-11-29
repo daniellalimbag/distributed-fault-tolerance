@@ -8,10 +8,11 @@ import com.example.enrollment.grpc.CreateCourseRequest;
 import com.example.enrollment.grpc.CreateCourseResponse;
 import com.example.enrollment.grpc.ListFacultyCoursesRequest;
 import com.example.enrollment.grpc.ListFacultyCoursesResponse;
+import com.example.enrollment.data.CourseEntity;
+import com.example.enrollment.data.CourseRepository;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,30 +23,25 @@ import static com.example.enrollment.security.ContextKeys.SUBJECT;
 
 @GrpcService
 public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
-    private final List<Course> courses = new ArrayList<>();
+    private final CourseRepository courses;
 
-    public CourseServiceImpl() {
-        courses.add(Course.newBuilder().setId("CS101").setName("Intro to CS").setUnits(3).setLaboratory(false).setFacultyId("f_anything").build());
-        courses.add(Course.newBuilder().setId("CS102").setName("Data Structures").setUnits(4).setLaboratory(true).setFacultyId("f_anything").build());
-        courses.add(Course.newBuilder().setId("MATH101").setName("Calculus I").setUnits(3).setLaboratory(false).setFacultyId("f_anything").build());
-    }
+    public CourseServiceImpl(CourseRepository courses) { this.courses = courses; }
 
     @Override
     public void listCourses(ListCoursesRequest request, StreamObserver<ListCoursesResponse> responseObserver) {
-        responseObserver.onNext(ListCoursesResponse.newBuilder().addAllCourses(courses).build());
+        List<Course> all = courses.findAll().stream().map(this::toProto).collect(Collectors.toList());
+        responseObserver.onNext(ListCoursesResponse.newBuilder().addAllCourses(all).build());
         responseObserver.onCompleted();
     }
 
-     public List<Course> getAllCourses() {
-         return courses;
-     }
+     public List<Course> getAllCourses() { return courses.findAll().stream().map(this::toProto).collect(Collectors.toList()); }
 
      public Optional<Course> findById(String id) {
-         return courses.stream().filter(c -> c.getId().equals(id)).findFirst();
+         return courses.findById(id).map(this::toProto);
      }
 
     public String getFacultyOfCourse(String courseId) {
-        return findById(courseId).map(Course::getFacultyId).orElse(null);
+        return courses.findById(courseId).map(CourseEntity::getFacultyId).orElse(null);
     }
 
     @Override
@@ -56,18 +52,11 @@ public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
             responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Only faculty can create courses").asRuntimeException());
             return;
         }
-        if (findById(request.getId()).isPresent()) {
+        if (courses.existsById(request.getId())) {
             responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Course ID already exists").asRuntimeException());
             return;
         }
-        Course c = Course.newBuilder()
-                .setId(request.getId())
-                .setName(request.getName())
-                .setUnits(request.getUnits())
-                .setLaboratory(request.getLaboratory())
-                .setFacultyId(facultyId)
-                .build();
-        courses.add(c);
+        courses.save(new CourseEntity(request.getId(), request.getName(), request.getUnits(), request.getLaboratory(), facultyId));
         responseObserver.onNext(CreateCourseResponse.newBuilder().setSuccess(true).build());
         responseObserver.onCompleted();
     }
@@ -80,8 +69,18 @@ public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
             responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Cannot view other faculty's courses").asRuntimeException());
             return;
         }
-        var list = courses.stream().filter(c -> request.getFacultyId().equals(c.getFacultyId())).collect(Collectors.toList());
+        var list = courses.findByFacultyId(request.getFacultyId()).stream().map(this::toProto).collect(Collectors.toList());
         responseObserver.onNext(ListFacultyCoursesResponse.newBuilder().addAllCourses(list).build());
         responseObserver.onCompleted();
+    }
+
+    private Course toProto(CourseEntity e) {
+        return Course.newBuilder()
+                .setId(e.getId())
+                .setName(e.getName())
+                .setUnits(e.getUnits())
+                .setLaboratory(e.getLaboratory())
+                .setFacultyId(e.getFacultyId())
+                .build();
     }
 }

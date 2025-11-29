@@ -6,6 +6,8 @@ import com.example.enrollment.grpc.LoginResponse;
 import com.example.enrollment.grpc.LogoutRequest;
 import com.example.enrollment.grpc.LogoutResponse;
 import com.example.enrollment.security.JwtUtil;
+import com.example.enrollment.data.UserRepository;
+import com.example.enrollment.data.UserEntity;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 
@@ -15,11 +17,21 @@ import java.util.concurrent.ConcurrentHashMap;
 @GrpcService
 public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
     private final Map<String, String> sessions = new ConcurrentHashMap<>();
+    private final UserRepository users;
+
+    public AuthServiceImpl(UserRepository users) { this.users = users; }
 
     @Override
     public void login(LoginRequest request, StreamObserver<LoginResponse> responseObserver) {
-        String role = request.getUsername().startsWith("f_") ? "FACULTY" : "STUDENT";
-        String token = JwtUtil.generateToken(request.getUsername(), role);
+        String username = request.getUsername();
+        String role = users.findById(username)
+                .map(UserEntity::getRole)
+                .orElseGet(() -> {
+                    String r = username.startsWith("f_") ? "FACULTY" : "STUDENT";
+                    users.save(new UserEntity(username, r));
+                    return r;
+                });
+        String token = JwtUtil.generateToken(username, role);
         sessions.put(token, role);
         LoginResponse resp = LoginResponse.newBuilder().setToken(token).setRole(role).build();
         responseObserver.onNext(resp);
