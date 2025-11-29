@@ -1,0 +1,24 @@
+services:
+  api-node:
+    build:
+      context: .
+      dockerfile: api-node/Dockerfile
+    image: enrollment-api:latest
+    ports:
+      - "8081:8081"
+      - "9090:9090"
+    environment:
+      - JAVA_OPTS=
+
+  web-node:
+    build:
+      context: .
+      dockerfile: web-node/Dockerfile
+    image: enrollment-web:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_OPTS=
+      - API_ADDRESS=static://api-node:9090
+    depends_on:
+      - api-node

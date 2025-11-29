@@ -7,5 +7,5 @@ server:
 grpc:
   client:
     api:
-      address: 'static://localhost:9090'
+      address: ${API_ADDRESS:static://api-node:9090}
       negotiationType: PLAINTEXT

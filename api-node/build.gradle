@@ -7,6 +7,7 @@ plugins {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'net.devh:grpc-server-spring-boot-starter:2.15.0.RELEASE'
     implementation platform('io.grpc:grpc-bom:1.62.2')
     implementation 'io.grpc:grpc-protobuf'
