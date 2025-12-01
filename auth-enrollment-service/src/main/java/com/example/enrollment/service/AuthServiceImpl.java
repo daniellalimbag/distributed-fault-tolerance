@@ -7,6 +7,9 @@ import com.example.enrollment.grpc.LogoutRequest;
 import com.example.enrollment.grpc.LogoutResponse;
 import com.example.enrollment.grpc.RegisterRequest;
 import com.example.enrollment.grpc.RegisterResponse;
+import com.example.enrollment.grpc.ListUsersRequest;
+import com.example.enrollment.grpc.ListUsersResponse;
+import com.example.enrollment.grpc.User;
 import com.example.enrollment.security.JwtUtil;
 import com.example.enrollment.data.UserEntity;
 import com.example.enrollment.data.UserRepository;
@@ -16,6 +19,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import io.grpc.Context;
+import io.grpc.Status;
+import static com.example.enrollment.security.ContextKeys.ROLE;
+
 
 @GrpcService
 public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
@@ -75,6 +82,17 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
     @Override
     public void register(RegisterRequest request, StreamObserver<RegisterResponse> responseObserver) {
         try {
+
+            String requesterRole = ROLE.get(Context.current());
+            if (!"ADMIN".equals(requesterRole)) {
+                responseObserver.onError(
+                        Status.PERMISSION_DENIED
+                                .withDescription("Only ADMIN can register new users.")
+                                .asRuntimeException()
+                );
+                return;
+            }
+
             String id = request.getUsername();
             String password = request.getPassword();
             String role = request.getRole().isBlank() ? "STUDENT" : request.getRole();
@@ -82,8 +100,8 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
             if (id == null || id.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
                 responseObserver.onError(
-                        io.grpc.Status.INVALID_ARGUMENT
-                                .withDescription("ID and password must not be empty")
+                        Status.INVALID_ARGUMENT
+                                .withDescription("ID and password must not be empty.")
                                 .asRuntimeException()
                 );
                 return;
@@ -91,8 +109,8 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
             if (users.existsById(id)) {
                 responseObserver.onError(
-                        io.grpc.Status.ALREADY_EXISTS
-                                .withDescription("ID already in use")
+                        Status.ALREADY_EXISTS
+                                .withDescription("A user with this ID already exists.")
                                 .asRuntimeException()
                 );
                 return;
@@ -107,7 +125,7 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
             RegisterResponse response = RegisterResponse.newBuilder()
                     .setSuccess(true)
-                    .setMessage("User registered successfully")
+                    .setMessage("User registered successfully.")
                     .build();
 
             responseObserver.onNext(response);
@@ -115,9 +133,34 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
         } catch (Exception e) {
             responseObserver.onError(
-                    io.grpc.Status.INTERNAL
+                    Status.INTERNAL
                             .withDescription("Registration failed: " + e.getMessage())
                             .asRuntimeException()
+            );
+        }
+    }
+
+    @Override
+    public void listUsers(ListUsersRequest request, StreamObserver<ListUsersResponse> responseObserver) {
+        try {
+            var allUsers = users.findAll().stream()
+                    .map(u -> User.newBuilder()
+                            .setId(u.getId())
+                            .setRole(u.getRole())
+                            .build())
+                    .toList();
+
+            ListUsersResponse response = ListUsersResponse.newBuilder()
+                    .addAllUsers(allUsers)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                io.grpc.Status.INTERNAL
+                    .withDescription("Failed to fetch users: " + e.getMessage())
+                    .asRuntimeException()
             );
         }
     }

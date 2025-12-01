@@ -19,7 +19,7 @@ public class GrpcAuthServerInterceptor implements ServerInterceptor {
                                                                  ServerCallHandler<ReqT, RespT> next) {
         String method = call.getMethodDescriptor().getFullMethodName();
 
-        if (method.endsWith("/Login") || method.endsWith("/Register") || method.endsWith("/Logout")) {
+        if (method.endsWith("/Login")) {
             return next.startCall(call, headers);
         }
 

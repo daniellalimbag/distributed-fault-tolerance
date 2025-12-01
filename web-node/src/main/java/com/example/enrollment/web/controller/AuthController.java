@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.servlet.http.HttpSession;
 import java.util.concurrent.TimeUnit;
 
+import io.grpc.Metadata;
+import io.grpc.stub.MetadataUtils;
+
 @Controller
 public class AuthController {
 
@@ -65,7 +68,13 @@ public class AuthController {
     }
 
     @GetMapping("/register")
-    public String registerForm() {
+    public String registerForm(HttpSession session, Model model) {
+        String role = (String) session.getAttribute("role");
+
+        if (!"ADMIN".equals(role)) {
+            return "redirect:/dashboard";
+        }
+
         return "register";
     }
 
@@ -74,10 +83,31 @@ public class AuthController {
             @RequestParam String username,
             @RequestParam String password,
             @RequestParam(defaultValue = "STUDENT") String role,
+            HttpSession session,
             Model model) {
 
         try {
-            RegisterResponse response = authStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+            String token = (String) session.getAttribute("token");
+            String currentRole = (String) session.getAttribute("role");
+
+            if (token == null || !"ADMIN".equals(currentRole)) {
+                model.addAttribute("error", "Only ADMIN can register new users.");
+                return "login";
+            }
+
+            // Build Authorization header
+            Metadata headers = new Metadata();
+            Metadata.Key<String> AUTH_HEADER =
+                    Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
+            headers.put(AUTH_HEADER, "Bearer " + token);
+
+            // Attach header to stub
+            var securedStub = authStub.withInterceptors(
+                    MetadataUtils.newAttachHeadersInterceptor(headers)
+            );
+
+            // Call register()
+            RegisterResponse response = securedStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                     .register(RegisterRequest.newBuilder()
                             .setUsername(username)
                             .setPassword(password)
@@ -85,7 +115,7 @@ public class AuthController {
                             .build());
 
             model.addAttribute("message", "User registered successfully!");
-            return "login";
+            return "register";
 
         } catch (Exception e) {
             model.addAttribute("error", "Registration failed: " + e.getMessage());

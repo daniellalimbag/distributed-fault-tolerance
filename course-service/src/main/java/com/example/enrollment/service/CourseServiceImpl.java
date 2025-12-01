@@ -47,20 +47,42 @@ public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
     @Override
     public void createCourse(CreateCourseRequest request, StreamObserver<CreateCourseResponse> responseObserver) {
         String role = ROLE.get(Context.current());
-        String facultyId = SUBJECT.get(Context.current());
-        if (!"FACULTY".equals(role)) {
-            responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Only faculty can create courses").asRuntimeException());
+        String currentUser = SUBJECT.get(Context.current());    
+
+        if (!"ADMIN".equals(role)) {
+            responseObserver.onError(Status.PERMISSION_DENIED
+                .withDescription("Only admin can create courses")
+                .asRuntimeException());
             return;
         }
         if (courseRepository.existsById(request.getId())) {
-            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("A course with this ID already exists!").asRuntimeException());
+            responseObserver.onError(Status.ALREADY_EXISTS
+                .withDescription("A course with this ID already exists!")
+                .asRuntimeException());
             return;
         }
         if (courseRepository.existsByNameIgnoreCase(request.getName())) {
-            throw new RuntimeException("Course name already exists!");
+            responseObserver.onError(Status.ALREADY_EXISTS
+                .withDescription("A course with this name already exists!")
+                .asRuntimeException());
+            return;
         }
+        String facultyId = request.getFacultyId();
 
-        courseRepository.save(new CourseEntity(request.getId(), request.getName(), request.getUnits(), request.getLaboratory(), facultyId));
+        if (facultyId == null || facultyId.isBlank()) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                .withDescription("Faculty ID is required for course assignment")
+                .asRuntimeException());
+            return;
+        }
+        courseRepository.save(new CourseEntity(
+            request.getId(),
+            request.getName(),
+            request.getUnits(),
+            request.getLaboratory(),
+            facultyId
+        ));
+
         responseObserver.onNext(CreateCourseResponse.newBuilder().setSuccess(true).build());
         responseObserver.onCompleted();
     }

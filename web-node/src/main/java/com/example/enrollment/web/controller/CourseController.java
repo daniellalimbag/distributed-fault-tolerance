@@ -2,6 +2,10 @@ package com.example.enrollment.web.controller;
 
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.enrollment.grpc.CourseServiceGrpc;
+import com.example.enrollment.grpc.CreateCourseRequest;
+import com.example.enrollment.grpc.CreateCourseResponse;
+import com.example.enrollment.grpc.AuthServiceGrpc;
+import com.example.enrollment.grpc.ListUsersRequest;
 import com.example.enrollment.grpc.EnrollRequest;
 import com.example.enrollment.grpc.EnrollmentServiceGrpc;
 import com.example.enrollment.grpc.ListCoursesRequest;
@@ -22,6 +26,9 @@ public class CourseController {
     private CourseServiceGrpc.CourseServiceBlockingStub courseStub;
 
     @GrpcClient("authEnroll")
+    private AuthServiceGrpc.AuthServiceBlockingStub authStub;
+
+    @GrpcClient("authEnroll")
     private EnrollmentServiceGrpc.EnrollmentServiceBlockingStub enrollmentStub;
 
     @GetMapping("/courses")
@@ -33,6 +40,55 @@ public class CourseController {
         model.addAttribute("courses", response.getCoursesList());
         return "courses";
     }
+
+    @GetMapping("/admin/courses/create")
+    public String showCreateCourseForm(Model model, HttpSession session) {
+        if (!"ADMIN".equals(session.getAttribute("role"))) {
+            return "redirect:/dashboard";
+        }
+
+        var userResponse = authStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                .listUsers(ListUsersRequest.newBuilder().build());
+
+        var facultyList = userResponse.getUsersList().stream()
+                .filter(u -> "FACULTY".equals(u.getRole()))
+                .toList();
+
+        model.addAttribute("facultyList", facultyList);
+        return "admin-create-course";
+    }
+
+    @PostMapping("/admin/courses/create")
+    public String createCourse(@RequestParam String id,
+                            @RequestParam String name,
+                            @RequestParam Integer units,
+                            @RequestParam(required = false, defaultValue = "false") boolean laboratory,
+                            @RequestParam String facultyId,
+                            HttpSession session,
+                            Model model) {
+        try {
+            if (!"ADMIN".equals(session.getAttribute("role"))) {
+                model.addAttribute("error", "Access denied. Only ADMIN can create courses.");
+                return "admin-create-course";
+            }
+
+            var resp = courseStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                    .createCourse(CreateCourseRequest.newBuilder()
+                            .setId(id)
+                            .setName(name)
+                            .setUnits(units)
+                            .setLaboratory(laboratory)
+                            .setFacultyId(facultyId)
+                            .build());
+
+            model.addAttribute("message", "Course created successfully!");
+            return "redirect:/dashboard";
+        } catch (Exception e) {
+            model.addAttribute("error", "Failed to create course: " + e.getMessage());
+            return "admin-create-course";
+        }
+    }
+
 
     @PostMapping("/enroll")
     public String enroll(@RequestParam String courseId, HttpSession session, RedirectAttributes redirectAttributes) {

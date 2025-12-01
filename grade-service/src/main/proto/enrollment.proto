@@ -38,7 +38,13 @@ message UploadGradeResponse { bool success = 1; }
 
 message GetStudentOverviewResponse { repeated GradeEntry entries = 1; }
 
-message CreateCourseRequest { string id = 1; string name = 2; uint32 units = 3; bool laboratory = 4; }
+message CreateCourseRequest {
+  string id = 1;
+  string name = 2;
+  uint32 units = 3;
+  bool laboratory = 4;
+  string faculty_id = 5;
+}
 message CreateCourseResponse { bool success = 1; }
 message ListFacultyCoursesRequest { string faculty_id = 1; }
 message ListFacultyCoursesResponse { repeated Course courses = 1; }
@@ -47,10 +53,21 @@ message ListStudentsInCourseRequest { string course_id = 1; }
 message StudentCourseGrade { string student_id = 1; string grade = 2; }
 message ListStudentsInCourseResponse { repeated StudentCourseGrade entries = 1; }
 
+message ListUsersRequest {}
+
+message User {
+  string id = 1;
+  string role = 2;
+}
+message ListUsersResponse {
+  repeated User users = 1;
+}
+
 service AuthService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
 }
 service CourseService {
   rpc ListCourses(ListCoursesRequest) returns (ListCoursesResponse);
@@ -59,6 +76,7 @@ service CourseService {
 }
 service EnrollmentService {
   rpc Enroll(EnrollRequest) returns (EnrollResponse);
+  rpc Drop(EnrollRequest) returns (EnrollResponse);
   rpc ListStudentsInCourse(ListStudentsInCourseRequest) returns (ListStudentsInCourseResponse);
 }
 service GradesService {
