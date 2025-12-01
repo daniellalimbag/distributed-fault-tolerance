@@ -23,26 +23,25 @@ import static com.example.enrollment.security.ContextKeys.SUBJECT;
 
 @GrpcService
 public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
-    private final CourseRepository courses;
-    private CourseRepository courseRepository;
+    private final CourseRepository courseRepository;
 
-    public CourseServiceImpl(CourseRepository courses) { this.courses = courses; }
+    public CourseServiceImpl(CourseRepository courses) { this.courseRepository = courses; }
 
     @Override
     public void listCourses(ListCoursesRequest request, StreamObserver<ListCoursesResponse> responseObserver) {
-        List<Course> all = courses.findAll().stream().map(this::toProto).collect(Collectors.toList());
+        List<Course> all = courseRepository.findAll().stream().map(this::toProto).collect(Collectors.toList());
         responseObserver.onNext(ListCoursesResponse.newBuilder().addAllCourses(all).build());
         responseObserver.onCompleted();
     }
 
-    public List<Course> getAllCourses() { return courses.findAll().stream().map(this::toProto).collect(Collectors.toList()); }
+    public List<Course> getAllCourses() { return courseRepository.findAll().stream().map(this::toProto).collect(Collectors.toList()); }
 
     public Optional<Course> findById(String id) {
-        return courses.findById(id).map(this::toProto);
+        return courseRepository.findById(id).map(this::toProto);
     }
 
     public String getFacultyOfCourse(String courseId) {
-        return courses.findById(courseId).map(CourseEntity::getFacultyId).orElse(null);
+        return courseRepository.findById(courseId).map(CourseEntity::getFacultyId).orElse(null);
     }
 
     @Override
@@ -53,7 +52,7 @@ public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
             responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Only faculty can create courses").asRuntimeException());
             return;
         }
-        if (courses.existsById(request.getId())) {
+        if (courseRepository.existsById(request.getId())) {
             responseObserver.onError(Status.ALREADY_EXISTS.withDescription("A course with this ID already exists!").asRuntimeException());
             return;
         }
@@ -61,7 +60,7 @@ public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
             throw new RuntimeException("Course name already exists!");
         }
 
-        courses.save(new CourseEntity(request.getId(), request.getName(), request.getUnits(), request.getLaboratory(), facultyId));
+        courseRepository.save(new CourseEntity(request.getId(), request.getName(), request.getUnits(), request.getLaboratory(), facultyId));
         responseObserver.onNext(CreateCourseResponse.newBuilder().setSuccess(true).build());
         responseObserver.onCompleted();
     }
@@ -74,7 +73,7 @@ public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
             responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Cannot view other faculty's courses").asRuntimeException());
             return;
         }
-        var list = courses.findByFacultyId(request.getFacultyId()).stream().map(this::toProto).collect(Collectors.toList());
+        var list = courseRepository.findByFacultyId(request.getFacultyId()).stream().map(this::toProto).collect(Collectors.toList());
         responseObserver.onNext(ListFacultyCoursesResponse.newBuilder().addAllCourses(list).build());
         responseObserver.onCompleted();
     }
