@@ -12,6 +12,16 @@ message LoginResponse { string token = 1; string role = 2; }
 message LogoutRequest { string token = 1; }
 message LogoutResponse { bool success = 1; }
 
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+  string role = 3;
+}
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+}
+
 message Course { string id = 1; string name = 2; uint32 units = 3; bool laboratory = 4; string faculty_id = 5; }
 message ListCoursesRequest {}
 message ListCoursesResponse { repeated Course courses = 1; }
@@ -38,6 +48,7 @@ message StudentCourseGrade { string student_id = 1; string grade = 2; }
 message ListStudentsInCourseResponse { repeated StudentCourseGrade entries = 1; }
 
 service AuthService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
 }

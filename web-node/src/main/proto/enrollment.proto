@@ -12,6 +12,16 @@ message LoginResponse { string token = 1; string role = 2; }
 message LogoutRequest { string token = 1; }
 message LogoutResponse { bool success = 1; }
 
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+  string role = 3;
+}
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+}
+
 message Course { string id = 1; string name = 2; uint32 units = 3; bool laboratory = 4; string faculty_id = 5; }
 message ListCoursesRequest {}
 message ListCoursesResponse { repeated Course courses = 1; }
@@ -26,21 +36,19 @@ message GetGradesResponse { repeated GradeEntry grades = 1; }
 message UploadGradeRequest { string student_id = 1; string course_id = 2; string grade = 3; }
 message UploadGradeResponse { bool success = 1; }
 
-// Student overview: enrolled courses with grade if available, else grade = "NGS"
 message GetStudentOverviewResponse { repeated GradeEntry entries = 1; }
 
-// Faculty course management
 message CreateCourseRequest { string id = 1; string name = 2; uint32 units = 3; bool laboratory = 4; }
 message CreateCourseResponse { bool success = 1; }
 message ListFacultyCoursesRequest { string faculty_id = 1; }
 message ListFacultyCoursesResponse { repeated Course courses = 1; }
 
-// Enrollment listing for a course
 message ListStudentsInCourseRequest { string course_id = 1; }
 message StudentCourseGrade { string student_id = 1; string grade = 2; }
 message ListStudentsInCourseResponse { repeated StudentCourseGrade entries = 1; }
 
 service AuthService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
 }
@@ -57,7 +65,6 @@ service GradesService {
   rpc GetGrades(GetGradesRequest) returns (GetGradesResponse);
   rpc UploadGrade(UploadGradeRequest) returns (UploadGradeResponse);
 }
-
 service StudentService {
   rpc GetStudentOverview(GetGradesRequest) returns (GetStudentOverviewResponse);
 }
