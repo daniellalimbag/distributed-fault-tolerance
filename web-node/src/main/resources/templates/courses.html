@@ -8,6 +8,10 @@
 </head>
 <body class="min-h-screen bg-gray-50">
   <div class="max-w-6xl mx-auto px-4 py-8">
+    <!--Successfully added Course Banner-->
+    <div id="success-banner" th:if="${successMessage}" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+      <p th:text="${successMessage}">Course Added Succesfully!</p>
+    </div>
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-semibold text-gray-900">Available Courses</h1>
       <a href="/dashboard" class="text-sm text-gray-600 hover:text-indigo-600">Back</a>
@@ -44,5 +48,16 @@
       </div>
     </div>
   </div>
+  <script>
+    // Auto-hide success message after 3 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const banner = document.getElementById('success-banner');
+      if (banner) {
+        setTimeout(() => {
+          banner.style.display = 'none';
+        }, 3000);
+      }
+    });
+  </script>
 </body>
 </html>

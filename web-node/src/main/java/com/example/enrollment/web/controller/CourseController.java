@@ -1,5 +1,6 @@
 package com.example.enrollment.web.controller;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.enrollment.grpc.CourseServiceGrpc;
 import com.example.enrollment.grpc.EnrollRequest;
 import com.example.enrollment.grpc.EnrollmentServiceGrpc;
@@ -34,13 +35,15 @@ public class CourseController {
     }
 
     @PostMapping("/enroll")
-    public String enroll(@RequestParam String courseId, HttpSession session) {
+    public String enroll(@RequestParam String courseId, HttpSession session, RedirectAttributes redirectAttributes) {
         String studentId = String.valueOf(session.getAttribute("username"));
         Object role = session.getAttribute("role");
         if (role != null && "FACULTY".equals(role.toString())) return "redirect:/dashboard";
         if (studentId == null) return "redirect:/login";
         enrollmentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                 .enroll(EnrollRequest.newBuilder().setStudentId(studentId).setCourseId(courseId).build());
+
+        redirectAttributes.addFlashAttribute("successMessage", "Course enrolled successfully!");
         return "redirect:/courses";
     }
 }
