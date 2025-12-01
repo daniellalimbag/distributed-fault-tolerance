@@ -5,4 +5,6 @@ import java.util.List;
 
 public interface CourseRepository extends JpaRepository<CourseEntity, String> {
     List<CourseEntity> findByFacultyId(String facultyId);
+    boolean existsByNameIgnoreCase(String name);
 }
+

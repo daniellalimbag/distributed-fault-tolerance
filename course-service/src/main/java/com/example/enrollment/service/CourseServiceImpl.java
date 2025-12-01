@@ -24,6 +24,7 @@ import static com.example.enrollment.security.ContextKeys.SUBJECT;
 @GrpcService
 public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
     private final CourseRepository courses;
+    private CourseRepository courseRepository;
 
     public CourseServiceImpl(CourseRepository courses) { this.courses = courses; }
 
@@ -53,9 +54,13 @@ public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
             return;
         }
         if (courses.existsById(request.getId())) {
-            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Course ID already exists").asRuntimeException());
+            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("A course with this ID already exists!").asRuntimeException());
             return;
         }
+        if (courseRepository.existsByNameIgnoreCase(request.getName())) {
+            throw new RuntimeException("Course name already exists!");
+        }
+
         courses.save(new CourseEntity(request.getId(), request.getName(), request.getUnits(), request.getLaboratory(), facultyId));
         responseObserver.onNext(CreateCourseResponse.newBuilder().setSuccess(true).build());
         responseObserver.onCompleted();
