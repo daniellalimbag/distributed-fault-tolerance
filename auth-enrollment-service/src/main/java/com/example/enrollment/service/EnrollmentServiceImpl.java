@@ -31,6 +31,58 @@ public class EnrollmentServiceImpl extends EnrollmentServiceGrpc.EnrollmentServi
 
     @Override
     @Transactional
+    public void drop(EnrollRequest request, StreamObserver<EnrollResponse> responseObserver) {
+    String role = ContextKeys.ROLE.get(Context.current());
+    String subject = ContextKeys.SUBJECT.get(Context.current());
+
+    // Only the student can drop their own course
+    if (!"STUDENT".equals(role) || !request.getStudentId().equals(subject)) {
+        responseObserver.onError(Status.PERMISSION_DENIED
+                .withDescription("Only the student can drop their own courses")
+                .asRuntimeException());
+        return;
+    }
+
+    List<EnrollmentEntity> enrolled = enrollments.findByStudentId(request.getStudentId());
+    if (enrolled.isEmpty()) {
+        responseObserver.onError(
+                Status.NOT_FOUND
+                        .withDescription("Student is not enrolled in any courses")
+                        .asRuntimeException()
+        );
+        return;
+    }
+
+    EnrollmentEntity target = null;
+    for (EnrollmentEntity e : enrolled) {
+        if (e.getCourseId().equals(request.getCourseId())) {
+            target = e;
+            break;
+        }
+    }
+
+        if (target == null) {
+        responseObserver.onError(
+                Status.NOT_FOUND
+                        .withDescription("The student is not enrolled in this course")
+                        .asRuntimeException()
+        );
+        return;
+    }
+
+    enrollments.delete(target);
+
+    responseObserver.onNext(EnrollResponse.newBuilder()
+            .setSuccess(true)
+            .setMessage("Course dropped successfully")
+            .build());
+    responseObserver.onCompleted();
+    }
+
+    
+
+    @Override
+    @Transactional
     public void enroll(EnrollRequest request, StreamObserver<EnrollResponse> responseObserver) {
         String role = ContextKeys.ROLE.get(Context.current());
         String subject = ContextKeys.SUBJECT.get(Context.current());

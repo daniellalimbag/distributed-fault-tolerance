@@ -59,6 +59,7 @@ service CourseService {
 }
 service EnrollmentService {
   rpc Enroll(EnrollRequest) returns (EnrollResponse);
+  rpc Drop(EnrollRequest) returns (EnrollResponse);
   rpc ListStudentsInCourse(ListStudentsInCourseRequest) returns (ListStudentsInCourseResponse);
 }
 service GradesService {
