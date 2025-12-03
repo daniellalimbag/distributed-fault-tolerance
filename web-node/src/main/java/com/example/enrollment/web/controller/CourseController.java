@@ -102,4 +102,34 @@ public class CourseController {
         redirectAttributes.addFlashAttribute("successMessage", "Course enrolled successfully!");
         return "redirect:/courses";
     }
+
+    @PostMapping("/grades/drop")
+    public String dropCourse(@RequestParam String courseId, HttpSession session, RedirectAttributes redirectAttributes) {
+        String studentId = String.valueOf(session.getAttribute("username"));
+        Object role = session.getAttribute("role");
+        if (role == null || !"STUDENT".equals(role.toString())) return "redirect:/dashboard";
+
+        if(studentId == null){
+            return "redirect:/login";
+        }
+
+    try {
+        var response = enrollmentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                .drop(EnrollRequest.newBuilder()
+                        .setStudentId(studentId)
+                        .setCourseId(courseId)
+                        .build());
+
+        if (response.getSuccess()) {
+            redirectAttributes.addFlashAttribute("successMessage", "Course dropped successfully!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to drop course: " + response.getMessage());
+        }
+
+    } catch (Exception e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error: " + e.getMessage());
+    }
+
+    return "redirect:/grades";
+    }
 }
