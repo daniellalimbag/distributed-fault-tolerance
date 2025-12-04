@@ -26,20 +26,28 @@
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Units</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lab</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Faculty</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th class="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-100" th:remove="all-but-first">
-            <tr th:each="c : ${courses}">
+            <tr th:each="c : ${courses}" th:with="count=${enrolledCounts[c.id]}, closed=${count} >= ${c.capacity}">
               <td class="px-4 py-3 text-sm text-gray-900" th:text="${c.id}"></td>
               <td class="px-4 py-3 text-sm text-gray-700" th:text="${c.name}"></td>
               <td class="px-4 py-3 text-sm text-gray-700" th:text="${c.units}"></td>
               <td class="px-4 py-3 text-sm" th:text="${c.laboratory} ? 'Yes' : 'No'"></td>
               <td class="px-4 py-3 text-sm text-gray-500" th:text="${c.facultyId}"></td>
+              <td class="px-4 py-3 text-sm text-gray-700"><span th:text="${count}"></span> / <span th:text="${c.capacity}"></span></td>
+              <td class="px-4 py-3 text-sm">
+                <span th:classappend="${closed} ? 'text-red-600' : 'text-green-700'" th:text="${closed} ? 'Closed' : 'Open'"></span>
+              </td>
               <td class="px-4 py-3 text-right">
                 <form method="post" action="/enroll" class="inline">
                   <input type="hidden" name="courseId" th:value="${c.id}" />
-                  <button type="submit" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-white text-sm hover:bg-indigo-700">Enroll</button>
+                  <button type="submit" class="inline-flex items-center rounded-md px-3 py-1.5 text-white text-sm"
+                          th:classappend="${closed or !isStudent} ? ' bg-gray-300 cursor-not-allowed' : ' bg-[#206b28] hover:brightness-95'"
+                          th:disabled="${closed or !isStudent}">Enroll</button>
                 </form>
               </td>
             </tr>

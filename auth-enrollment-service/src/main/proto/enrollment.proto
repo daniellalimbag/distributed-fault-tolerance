@@ -29,6 +29,9 @@ message ListCoursesResponse { repeated Course courses = 1; }
 message EnrollRequest { string student_id = 1; string course_id = 2; }
 message EnrollResponse { bool success = 1; string message = 2; }
 
+message GetEnrollmentCountRequest { string course_id = 1; }
+message GetEnrollmentCountResponse { uint32 count = 1; }
+
 message GetGradesRequest { string student_id = 1; }
 message GradeEntry { string course_id = 1; string course_name = 2; string grade = 3; }
 message GetGradesResponse { repeated GradeEntry grades = 1; }
@@ -78,6 +81,7 @@ service EnrollmentService {
   rpc Enroll(EnrollRequest) returns (EnrollResponse);
   rpc Drop(EnrollRequest) returns (EnrollResponse);
   rpc ListStudentsInCourse(ListStudentsInCourseRequest) returns (ListStudentsInCourseResponse);
+  rpc GetEnrollmentCount(GetEnrollmentCountRequest) returns (GetEnrollmentCountResponse);
 }
 service GradesService {
   rpc GetGrades(GetGradesRequest) returns (GetGradesResponse);

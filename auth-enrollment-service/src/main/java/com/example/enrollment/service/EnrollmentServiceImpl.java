@@ -113,4 +113,15 @@ public void drop(EnrollRequest request, StreamObserver<EnrollResponse> responseO
         responseObserver.onNext(ListStudentsInCourseResponse.newBuilder().addAllEntries(entries).build());
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void getEnrollmentCount(com.example.enrollment.grpc.GetEnrollmentCountRequest request,
+                                   io.grpc.stub.StreamObserver<com.example.enrollment.grpc.GetEnrollmentCountResponse> responseObserver) {
+        // Accessible to any authenticated role; just return the count for the course
+        long count = enrollments.countByCourseId(request.getCourseId());
+        responseObserver.onNext(com.example.enrollment.grpc.GetEnrollmentCountResponse.newBuilder()
+                .setCount((int) count)
+                .build());
+        responseObserver.onCompleted();
+    }
 }

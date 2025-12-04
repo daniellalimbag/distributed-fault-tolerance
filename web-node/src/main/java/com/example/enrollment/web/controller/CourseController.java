@@ -37,7 +37,22 @@ public class CourseController {
         if (role != null && "FACULTY".equals(role.toString())) return "redirect:/dashboard";
         var response = courseStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                 .listCourses(ListCoursesRequest.newBuilder().build());
-        model.addAttribute("courses", response.getCoursesList());
+
+        var courses = response.getCoursesList();
+        java.util.Map<String, Integer> enrolledCounts = new java.util.HashMap<>();
+        for (var c : courses) {
+            try {
+                var countResp = enrollmentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                        .getEnrollmentCount(com.example.enrollment.grpc.GetEnrollmentCountRequest
+                                .newBuilder().setCourseId(c.getId()).build());
+                enrolledCounts.put(c.getId(), countResp.getCount());
+            } catch (Exception e) {
+                enrolledCounts.put(c.getId(), 0);
+            }
+        }
+        model.addAttribute("courses", courses);
+        model.addAttribute("enrolledCounts", enrolledCounts);
+        model.addAttribute("isStudent", role != null && "STUDENT".equals(role.toString()));
         return "courses";
     }
 
