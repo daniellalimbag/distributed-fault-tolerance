@@ -47,6 +47,15 @@ message CompleteCourseRequest {
   string academic_year_range = 3; // YYYY-YYYY
 }
 message CompleteCourseResponse { uint32 affected = 1; }
+message DeleteCourseRequest {
+  string courseId = 1;
+}
+
+message DeleteCourseResponse {
+  bool success = 1;
+  string message = 2;
+}
+
 
 message GetStudentHistoryRequest { string student_id = 1; }
 message HistoryEntry {
@@ -70,6 +79,21 @@ message CreateCourseRequest {
   string faculty_id = 5;
   uint32 capacity = 6;
 }
+
+message UpdateCourseRequest {
+  string id = 1;
+  string name = 2;
+  uint32 units = 3;
+  bool laboratory = 4;
+  string faculty_id = 5;
+  uint32 capacity = 6;
+}
+
+message UpdateCourseResponse {
+  bool success = 1;
+  string message = 2;
+}
+
 message CreateCourseResponse { bool success = 1; }
 message ListFacultyCoursesRequest { string faculty_id = 1; }
 message ListFacultyCoursesResponse { repeated Course courses = 1; }
@@ -102,6 +126,8 @@ service CourseService {
   rpc CreateCourse(CreateCourseRequest) returns (CreateCourseResponse);
   rpc ListFacultyCourses(ListFacultyCoursesRequest) returns (ListFacultyCoursesResponse);
   rpc UpdateCourseCapacity(UpdateCourseCapacityRequest) returns (UpdateCourseCapacityResponse);
+  rpc DeleteCourse(DeleteCourseRequest) returns (DeleteCourseResponse);
+  rpc UpdateCourse(UpdateCourseRequest) returns (UpdateCourseResponse);
 }
 service EnrollmentService {
   rpc Enroll(EnrollRequest) returns (EnrollResponse);

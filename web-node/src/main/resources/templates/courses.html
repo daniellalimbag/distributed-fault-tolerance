@@ -43,19 +43,40 @@
                 <span th:classappend="${closed} ? 'text-red-600' : 'text-green-700'" th:text="${closed} ? 'Closed' : 'Open'"></span>
               </td>
               <td class="px-4 py-3 text-right">
-                <form method="post" action="/enroll" class="inline">
-                  <input type="hidden" name="courseId" th:value="${c.id}" />
-                  <button type="submit" class="inline-flex items-center rounded-md px-3 py-1.5 text-white text-sm"
-                          th:classappend="${closed or !isStudent} ? ' bg-gray-300 cursor-not-allowed' : ' bg-[#206b28] hover:brightness-95'"
-                          th:disabled="${closed or !isStudent}">Enroll</button>
-                </form>
+                <div class="flex items-center justify-end gap-3">
+                  <!-- Enroll form (keeps existing logic) -->
+                  <form method="post" action="/enroll" class="inline">
+                    <input type="hidden" name="courseId" th:value="${c.id}" />
+                    <button type="submit"
+                            class="inline-flex items-center rounded-md px-3 py-1.5 text-white text-sm"
+                            th:classappend="${closed or !isStudent} ? ' bg-gray-300 cursor-not-allowed' : ' bg-[#206b28] hover:brightness-95'"
+                            th:disabled="${closed or !isStudent}">Enroll</button>
+                  </form>
+                      <!-- Edit button (ADMIN only) -->
+                       
+                  <a th:if="${isAdmin}"
+                    th:href="@{'/admin/courses/edit'(courseId=${c.id})}"
+                    class="inline-flex items-center rounded-md px-3 py-1.5 text-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                    Edit
+                  </a>
+
+
+                  <!-- Remove course button, admin only -->
+                  <form method="post" action="/admin/courses/delete" class="inline" th:if="${isAdmin}" onsubmit="return confirmDelete(this);">
+                    <input type="hidden" name="courseId" th:value="${c.id}" />
+                    <button type="submit" class="inline-flex items-center rounded-md px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700">
+                      Remove Course!
+                    </button>
+                  </form>
+                </div>
               </td>
+
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-  </div>
+  </div>  
   <script>
     // Auto-hide success message after 3 seconds
     document.addEventListener('DOMContentLoaded', function() {
@@ -67,5 +88,12 @@
       }
     });
   </script>
+  <script>
+  function confirmDelete(form) {
+    const courseId = form.querySelector('input[name="courseId"]').value;
+    return confirm('Are you sure you want to remove course ' + courseId + '? This cannot be undone.');
+  }
+</script>
+
 </body>
 </html>
