@@ -41,6 +41,24 @@ message UploadGradeResponse { bool success = 1; }
 
 message GetStudentOverviewResponse { repeated GradeEntry entries = 1; }
 
+message CompleteCourseRequest {
+  string course_id = 1;
+  uint32 term_number = 2; // 1-3
+  string academic_year_range = 3; // YYYY-YYYY
+}
+message CompleteCourseResponse { uint32 affected = 1; }
+
+message GetStudentHistoryRequest { string student_id = 1; }
+message HistoryEntry {
+  string course_id = 1;
+  string course_name = 2;
+  string grade = 3;
+  uint32 term_number = 4;
+  string academic_year_range = 5;
+  string completed_at = 6;
+}
+message GetStudentHistoryResponse { repeated HistoryEntry entries = 1; }
+
 message CreateCourseRequest {
   string id = 1;
   string name = 2;
@@ -82,6 +100,7 @@ service EnrollmentService {
   rpc Drop(EnrollRequest) returns (EnrollResponse);
   rpc ListStudentsInCourse(ListStudentsInCourseRequest) returns (ListStudentsInCourseResponse);
   rpc GetEnrollmentCount(GetEnrollmentCountRequest) returns (GetEnrollmentCountResponse);
+  rpc CompleteCourse(CompleteCourseRequest) returns (CompleteCourseResponse);
 }
 service GradesService {
   rpc GetGrades(GetGradesRequest) returns (GetGradesResponse);
@@ -89,4 +108,5 @@ service GradesService {
 }
 service StudentService {
   rpc GetStudentOverview(GetGradesRequest) returns (GetStudentOverviewResponse);
+  rpc GetStudentHistory(GetStudentHistoryRequest) returns (GetStudentHistoryResponse);
 }

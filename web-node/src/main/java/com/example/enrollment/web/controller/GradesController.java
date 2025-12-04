@@ -20,7 +20,7 @@ public class GradesController {
     @GrpcClient("grade")
     private GradesServiceGrpc.GradesServiceBlockingStub gradesStub;
 
-    @GrpcClient("course")
+    @GrpcClient("authEnroll")
     private StudentServiceGrpc.StudentServiceBlockingStub studentStub;
 
     @GetMapping("/grades")
@@ -29,9 +29,19 @@ public class GradesController {
         Object role = session.getAttribute("role");
         if (role == null || !"STUDENT".equals(role.toString())) return "redirect:/dashboard";
         if (studentId == null) return "redirect:/login";
-        var resp = studentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+        var overview = studentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                 .getStudentOverview(GetGradesRequest.newBuilder().setStudentId(studentId).build());
-        model.addAttribute("grades", resp.getEntriesList());
+        model.addAttribute("grades", overview.getEntriesList());
+
+        try {
+            var history = studentStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+                    .getStudentHistory(com.example.enrollment.grpc.GetStudentHistoryRequest.newBuilder()
+                            .setStudentId(studentId).build());
+            model.addAttribute("historyEntries", history.getEntriesList());
+        } catch (Exception e) {
+            model.addAttribute("historyEntries", java.util.Collections.emptyList());
+            model.addAttribute("historyError", e.getMessage());
+        }
         return "grades";
     }
 

@@ -31,6 +31,9 @@ public class CourseController {
     @GrpcClient("authEnroll")
     private EnrollmentServiceGrpc.EnrollmentServiceBlockingStub enrollmentStub;
 
+    @GrpcClient("authEnroll")
+    private com.example.enrollment.grpc.StudentServiceGrpc.StudentServiceBlockingStub studentStub;
+
     @GetMapping("/courses")
     public String listCourses(Model model, HttpSession session) {
         Object role = session.getAttribute("role");
@@ -147,6 +150,54 @@ public class CourseController {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed: " + e.getMessage());
         }
         return "redirect:/admin/courses/capacity";
+    }
+
+    @GetMapping("/admin/courses/complete")
+    public String completeCoursePage(Model model, HttpSession session) {
+        if (!"ADMIN".equals(session.getAttribute("role"))) return "redirect:/dashboard";
+        var response = courseStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                .listCourses(ListCoursesRequest.newBuilder().build());
+        model.addAttribute("courses", response.getCoursesList());
+        return "admin-complete-course";
+    }
+
+    @PostMapping("/admin/courses/complete")
+    public String completeCourse(@RequestParam String courseId,
+                                 @RequestParam Integer termNumber,
+                                 @RequestParam String academicYearRange,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+        if (!"ADMIN".equals(session.getAttribute("role"))) return "redirect:/dashboard";
+        try {
+            var req = com.example.enrollment.grpc.CompleteCourseRequest.newBuilder()
+                    .setCourseId(courseId)
+                    .setTermNumber(termNumber)
+                    .setAcademicYearRange(academicYearRange)
+                    .build();
+            var resp = enrollmentStub.withDeadlineAfter(5, TimeUnit.SECONDS).completeCourse(req);
+            redirectAttributes.addFlashAttribute("successMessage", "Completed course. Affected enrollments: " + resp.getAffected());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to complete course: " + e.getMessage());
+        }
+        return "redirect:/admin/courses/complete";
+    }
+
+    @GetMapping("/student/history")
+    public String studentHistory(Model model, HttpSession session) {
+        Object role = session.getAttribute("role");
+        String studentId = String.valueOf(session.getAttribute("username"));
+        if (role == null || !"STUDENT".equals(role.toString())) return "redirect:/dashboard";
+        try {
+            var resp = studentStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+                    .getStudentHistory(com.example.enrollment.grpc.GetStudentHistoryRequest.newBuilder()
+                            .setStudentId(studentId)
+                            .build());
+            model.addAttribute("entries", resp.getEntriesList());
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("entries", java.util.Collections.emptyList());
+        }
+        return "student-history";
     }
 
     @PostMapping("/grades/drop")

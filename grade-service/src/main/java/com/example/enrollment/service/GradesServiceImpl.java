@@ -59,6 +59,10 @@ public class GradesServiceImpl extends GradesServiceGrpc.GradesServiceImplBase {
             return;
         }
         EnrollmentEntity en = opt.get();
+        if (en.getCompletedAt() != null) {
+            responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("Course is completed; grades are locked").asRuntimeException());
+            return;
+        }
         en.setGrade(request.getGrade());
         enrollments.save(en);
         responseObserver.onNext(UploadGradeResponse.newBuilder().setSuccess(true).build());

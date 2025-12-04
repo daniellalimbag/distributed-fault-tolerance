@@ -124,4 +124,51 @@ public void drop(EnrollRequest request, StreamObserver<EnrollResponse> responseO
                 .build());
         responseObserver.onCompleted();
     }
+
+    @Override
+    @Transactional
+    public void completeCourse(com.example.enrollment.grpc.CompleteCourseRequest request,
+                               io.grpc.stub.StreamObserver<com.example.enrollment.grpc.CompleteCourseResponse> responseObserver) {
+        String role = ContextKeys.ROLE.get(Context.current());
+        if (!"ADMIN".equals(role)) {
+            responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Only admin can complete courses").asRuntimeException());
+            return;
+        }
+
+        // validate academic_year_range format YYYY-YYYY and continuity
+        String yr = request.getAcademicYearRange();
+        if (!yr.matches("^\\d{4}-\\d{4}$")) {
+            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("academic_year_range must be YYYY-YYYY").asRuntimeException());
+            return;
+        }
+        int start = Integer.parseInt(yr.substring(0, 4));
+        int end = Integer.parseInt(yr.substring(5, 9));
+        if (end != start + 1) {
+            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("academic_year_range must be consecutive years").asRuntimeException());
+            return;
+        }
+        int termNumber = request.getTermNumber();
+        if (termNumber < 1 || termNumber > 3) {
+            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("term_number must be 1-3").asRuntimeException());
+            return;
+        }
+
+        // mark all current enrollments in this course as completed if not already
+        var list = enrollments.findByCourseId(request.getCourseId());
+        int affected = 0;
+        java.time.Instant now = java.time.Instant.now();
+        for (var en : list) {
+            if (en.getCompletedAt() == null) {
+                en.setTermNumber((short) termNumber);
+                en.setAcademicYearRange(yr);
+                en.setCompletedAt(now);
+                affected++;
+            }
+        }
+        if (affected > 0) {
+            enrollments.saveAll(list);
+        }
+        responseObserver.onNext(com.example.enrollment.grpc.CompleteCourseResponse.newBuilder().setAffected(affected).build());
+        responseObserver.onCompleted();
+    }
 }

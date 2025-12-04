@@ -20,6 +20,7 @@
           Register User
         </a>
         <a href="/admin/courses/create" class="text-gray-700 hover:text-indigo-600" th:if="${role}=='ADMIN'"> Create Course </a>
+        <a href="/admin/courses/complete" class="text-gray-700 hover:text-indigo-600" th:if="${role}=='ADMIN'"> Complete Course </a>
         <a href="/logout" class="text-red-600 hover:text-red-700">Logout</a>
       </nav>
     </div>
