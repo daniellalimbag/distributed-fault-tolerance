@@ -34,18 +34,31 @@ public class AuthController {
                         @RequestParam String password,
                         HttpSession session,
                         Model model) {
-
-        if (username.trim().isEmpty() || password.trim().isEmpty()) {
+        String u = username == null ? "" : username.trim();
+        String p = password == null ? "" : password.trim();
+        if (u.isEmpty() || p.isEmpty()) {
             model.addAttribute("error", "Username and password must not be empty.");
+            return "login";
+        }
+        if (u.length() < 3 || u.length() > 64) {
+            model.addAttribute("error", "Username must be between 3 and 64 characters.");
+            return "login";
+        }
+        if (p.length() < 6 || p.length() > 128) {
+            model.addAttribute("error", "Password must be between 6 and 128 characters.");
+            return "login";
+        }
+        if (!u.matches("^[A-Za-z0-9._-]+$")) {
+            model.addAttribute("error", "Username may only contain letters, numbers, dots, underscores, and hyphens.");
             return "login";
         }
 
         try {
             var resp = authStub.withDeadlineAfter(3, TimeUnit.SECONDS)
-                    .login(LoginRequest.newBuilder().setUsername(username).setPassword(password).build());
+                    .login(LoginRequest.newBuilder().setUsername(u).setPassword(p).build());
 
             session.setAttribute("token", resp.getToken());
-            session.setAttribute("username", username);
+            session.setAttribute("username", u);
             session.setAttribute("role", resp.getRole());
 
             return "redirect:/dashboard";
@@ -114,8 +127,7 @@ public class AuthController {
                             .setRole(role)
                             .build());
 
-            model.addAttribute("message", "User registered successfully!");
-            return "register";
+            return "redirect:/dashboard";
 
         } catch (Exception e) {
             model.addAttribute("error", "Registration failed: " + e.getMessage());

@@ -40,22 +40,14 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
             String rawPassword = request.getPassword();
 
             UserEntity user = users.findById(id).orElse(null);
-
-            // Bootstrap: create user on first login with provided password
-            if (user == null) {
-                String role = deriveRole(id);
-                UserEntity nu = new UserEntity();
-                nu.setId(id);
-                nu.setPassword(passwordEncoder.encode(rawPassword == null ? "" : rawPassword));
-                nu.setRole(role);
-                users.save(nu);
-                user = nu;
-            }
-
-            // Backfill missing password for legacy rows
-            if (user.getPassword() == null || user.getPassword().isBlank()) {
-                user.setPassword(passwordEncoder.encode(rawPassword == null ? "" : rawPassword));
-                users.save(user);
+            // Do NOT auto-create or backfill on login. Unknown users or users without a password cannot login.
+            if (user == null || user.getPassword() == null || user.getPassword().isBlank()) {
+                responseObserver.onError(
+                        io.grpc.Status.UNAUTHENTICATED
+                                .withDescription("Invalid login credentials")
+                                .asRuntimeException()
+                );
+                return;
             }
 
             if (!passwordEncoder.matches(rawPassword, user.getPassword())) {

@@ -168,7 +168,29 @@ public void drop(EnrollRequest request, StreamObserver<EnrollResponse> responseO
         if (affected > 0) {
             enrollments.saveAll(list);
         }
+        // Also mark the course record as completed (so completion is visible even with zero enrollments)
+        courses.findById(request.getCourseId()).ifPresent(c -> {
+            if (c.getCompletedAt() == null) {
+                c.setTermNumber((short) termNumber);
+                c.setAcademicYearRange(yr);
+                c.setCompletedAt(now);
+                courses.save(c);
+            }
+        });
         responseObserver.onNext(com.example.enrollment.grpc.CompleteCourseResponse.newBuilder().setAffected(affected).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void isCourseCompleted(com.example.enrollment.grpc.IsCourseCompletedRequest request,
+                                  io.grpc.stub.StreamObserver<com.example.enrollment.grpc.IsCourseCompletedResponse> responseObserver) {
+        // Any authenticated role may query; check course-level completion flag
+        boolean completed = courses.findById(request.getCourseId())
+                .map(c -> c.getCompletedAt() != null)
+                .orElse(false);
+        responseObserver.onNext(com.example.enrollment.grpc.IsCourseCompletedResponse.newBuilder()
+                .setCompleted(completed)
+                .build());
         responseObserver.onCompleted();
     }
 }

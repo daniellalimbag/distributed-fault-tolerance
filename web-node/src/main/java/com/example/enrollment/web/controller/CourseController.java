@@ -41,9 +41,22 @@ public class CourseController {
         var response = courseStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                 .listCourses(ListCoursesRequest.newBuilder().build());
 
-        var courses = response.getCoursesList();
+        var allCourses = response.getCoursesList();
+        java.util.List<com.example.enrollment.grpc.Course> courses = new java.util.ArrayList<>();
         java.util.Map<String, Integer> enrolledCounts = new java.util.HashMap<>();
-        for (var c : courses) {
+        for (var c : allCourses) {
+            // Skip courses that have been marked completed
+            try {
+                var compResp = enrollmentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                        .isCourseCompleted(com.example.enrollment.grpc.IsCourseCompletedRequest.newBuilder()
+                                .setCourseId(c.getId()).build());
+                if (compResp.getCompleted()) {
+                    continue; // do not include in available list
+                }
+            } catch (Exception e) {
+                // On error determining completion, include the course by default
+            }
+            courses.add(c);
             try {
                 var countResp = enrollmentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                         .getEnrollmentCount(com.example.enrollment.grpc.GetEnrollmentCountRequest

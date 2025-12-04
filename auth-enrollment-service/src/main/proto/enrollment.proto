@@ -59,6 +59,9 @@ message HistoryEntry {
 }
 message GetStudentHistoryResponse { repeated HistoryEntry entries = 1; }
 
+message IsCourseCompletedRequest { string course_id = 1; }
+message IsCourseCompletedResponse { bool completed = 1; }
+
 message CreateCourseRequest {
   string id = 1;
   string name = 2;
@@ -101,6 +104,7 @@ service EnrollmentService {
   rpc ListStudentsInCourse(ListStudentsInCourseRequest) returns (ListStudentsInCourseResponse);
   rpc GetEnrollmentCount(GetEnrollmentCountRequest) returns (GetEnrollmentCountResponse);
   rpc CompleteCourse(CompleteCourseRequest) returns (CompleteCourseResponse);
+  rpc IsCourseCompleted(IsCourseCompletedRequest) returns (IsCourseCompletedResponse);
 }
 service GradesService {
   rpc GetGrades(GetGradesRequest) returns (GetGradesResponse);
