@@ -24,10 +24,17 @@ public class CourseEntity {
     @Column(name = "faculty_id", length = 64, nullable = false)
     private String facultyId;
 
+    @Column(nullable = false)
+    private Integer capacity;
+
     public CourseEntity() {}
 
     public CourseEntity(String id, String name, Integer units, Boolean laboratory, String facultyId) {
         this.id = id; this.name = name; this.units = units; this.laboratory = laboratory; this.facultyId = facultyId;
+    }
+
+    public CourseEntity(String id, String name, Integer units, Boolean laboratory, String facultyId, Integer capacity) {
+        this.id = id; this.name = name; this.units = units; this.laboratory = laboratory; this.facultyId = facultyId; this.capacity = capacity;
     }
 
     public String getId() { return id; }
@@ -40,4 +47,6 @@ public class CourseEntity {
     public void setLaboratory(Boolean laboratory) { this.laboratory = laboratory; }
     public String getFacultyId() { return facultyId; }
     public void setFacultyId(String facultyId) { this.facultyId = facultyId; }
+    public Integer getCapacity() { return capacity; }
+    public void setCapacity(Integer capacity) { this.capacity = capacity; }
 }

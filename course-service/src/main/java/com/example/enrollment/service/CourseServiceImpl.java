@@ -34,6 +34,26 @@ public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
         responseObserver.onCompleted();
     }
 
+    @Override
+    public void updateCourseCapacity(com.example.enrollment.grpc.UpdateCourseCapacityRequest request,
+                                     StreamObserver<com.example.enrollment.grpc.UpdateCourseCapacityResponse> responseObserver) {
+        String role = ROLE.get(Context.current());
+        if (!"ADMIN".equals(role)) {
+            responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Only admin can update capacity").asRuntimeException());
+            return;
+        }
+        var opt = courseRepository.findById(request.getId());
+        if (opt.isEmpty()) {
+            responseObserver.onError(Status.NOT_FOUND.withDescription("Course not found").asRuntimeException());
+            return;
+        }
+        var entity = opt.get();
+        entity.setCapacity(request.getCapacity());
+        courseRepository.save(entity);
+        responseObserver.onNext(com.example.enrollment.grpc.UpdateCourseCapacityResponse.newBuilder().setSuccess(true).build());
+        responseObserver.onCompleted();
+    }
+
     public List<Course> getAllCourses() { return courseRepository.findAll().stream().map(this::toProto).collect(Collectors.toList()); }
 
     public Optional<Course> findById(String id) {
@@ -75,12 +95,14 @@ public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
                 .asRuntimeException());
             return;
         }
+        int capacity = request.getCapacity() == 0 ? 30 : request.getCapacity();
         courseRepository.save(new CourseEntity(
             request.getId(),
             request.getName(),
             request.getUnits(),
             request.getLaboratory(),
-            facultyId
+            facultyId,
+            capacity
         ));
 
         responseObserver.onNext(CreateCourseResponse.newBuilder().setSuccess(true).build());
@@ -107,6 +129,7 @@ public class CourseServiceImpl extends CourseServiceGrpc.CourseServiceImplBase {
                 .setUnits(e.getUnits())
                 .setLaboratory(e.getLaboratory())
                 .setFacultyId(e.getFacultyId())
+                .setCapacity(e.getCapacity() == null ? 0 : e.getCapacity())
                 .build();
     }
 }

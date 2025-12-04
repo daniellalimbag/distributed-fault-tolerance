@@ -73,6 +73,19 @@ public void drop(EnrollRequest request, StreamObserver<EnrollResponse> responseO
             responseObserver.onError(Status.NOT_FOUND.withDescription("Course not found").asRuntimeException());
             return;
         }
+        // Enforce capacity: closed when capacity reached
+        var courseOpt = courses.findById(request.getCourseId());
+        if (courseOpt.isEmpty()) {
+            responseObserver.onError(Status.NOT_FOUND.withDescription("Course not found").asRuntimeException());
+            return;
+        }
+        var course = courseOpt.get();
+        long current = enrollments.countByCourseId(request.getCourseId());
+        Integer capacity = course.getCapacity();
+        if (capacity != null && current >= capacity) {
+            responseObserver.onError(Status.RESOURCE_EXHAUSTED.withDescription("Course is full").asRuntimeException());
+            return;
+        }
         EnrollmentId id = new EnrollmentId(request.getStudentId(), request.getCourseId());
         enrollments.findById(id).orElseGet(() -> enrollments.save(new EnrollmentEntity(request.getStudentId(), request.getCourseId(), null)));
         responseObserver.onNext(EnrollResponse.newBuilder().setSuccess(true).setMessage("Enrolled").build());

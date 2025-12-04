@@ -22,7 +22,7 @@ message RegisterResponse {
   string message = 2;
 }
 
-message Course { string id = 1; string name = 2; uint32 units = 3; bool laboratory = 4; string faculty_id = 5; }
+message Course { string id = 1; string name = 2; uint32 units = 3; bool laboratory = 4; string faculty_id = 5; uint32 capacity = 6; }
 message ListCoursesRequest {}
 message ListCoursesResponse { repeated Course courses = 1; }
 
@@ -44,10 +44,14 @@ message CreateCourseRequest {
   uint32 units = 3;
   bool laboratory = 4;
   string faculty_id = 5;
+  uint32 capacity = 6;
 }
 message CreateCourseResponse { bool success = 1; }
 message ListFacultyCoursesRequest { string faculty_id = 1; }
 message ListFacultyCoursesResponse { repeated Course courses = 1; }
+
+message UpdateCourseCapacityRequest { string id = 1; uint32 capacity = 2; }
+message UpdateCourseCapacityResponse { bool success = 1; }
 
 message ListStudentsInCourseRequest { string course_id = 1; }
 message StudentCourseGrade { string student_id = 1; string grade = 2; }
@@ -73,6 +77,7 @@ service CourseService {
   rpc ListCourses(ListCoursesRequest) returns (ListCoursesResponse);
   rpc CreateCourse(CreateCourseRequest) returns (CreateCourseResponse);
   rpc ListFacultyCourses(ListFacultyCoursesRequest) returns (ListFacultyCoursesResponse);
+  rpc UpdateCourseCapacity(UpdateCourseCapacityRequest) returns (UpdateCourseCapacityResponse);
 }
 service EnrollmentService {
   rpc Enroll(EnrollRequest) returns (EnrollResponse);

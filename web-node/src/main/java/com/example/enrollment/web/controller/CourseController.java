@@ -64,6 +64,7 @@ public class CourseController {
                             @RequestParam Integer units,
                             @RequestParam(required = false, defaultValue = "false") boolean laboratory,
                             @RequestParam String facultyId,
+                            @RequestParam(defaultValue = "30") Integer capacity,
                             HttpSession session,
                             Model model) {
         try {
@@ -79,6 +80,7 @@ public class CourseController {
                             .setUnits(units)
                             .setLaboratory(laboratory)
                             .setFacultyId(facultyId)
+                            .setCapacity(capacity)
                             .build());
 
             model.addAttribute("message", "Course created successfully!");
@@ -96,11 +98,40 @@ public class CourseController {
         Object role = session.getAttribute("role");
         if (role != null && "FACULTY".equals(role.toString())) return "redirect:/dashboard";
         if (studentId == null) return "redirect:/login";
-        enrollmentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
-                .enroll(EnrollRequest.newBuilder().setStudentId(studentId).setCourseId(courseId).build());
-
-        redirectAttributes.addFlashAttribute("successMessage", "Course enrolled successfully!");
+        try {
+            enrollmentStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                    .enroll(EnrollRequest.newBuilder().setStudentId(studentId).setCourseId(courseId).build());
+            redirectAttributes.addFlashAttribute("successMessage", "Course enrolled successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Enrollment failed: " + e.getMessage());
+        }
         return "redirect:/courses";
+    }
+
+    @GetMapping("/admin/courses/capacity")
+    public String editCapacityPage(Model model, HttpSession session) {
+        if (!"ADMIN".equals(session.getAttribute("role"))) return "redirect:/dashboard";
+        var response = courseStub.withDeadlineAfter(3, TimeUnit.SECONDS)
+                .listCourses(ListCoursesRequest.newBuilder().build());
+        model.addAttribute("courses", response.getCoursesList());
+        return "admin-edit-capacity";
+    }
+
+    @PostMapping("/admin/courses/capacity")
+    public String updateCapacity(@RequestParam String id,
+                                 @RequestParam Integer capacity,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+        if (!"ADMIN".equals(session.getAttribute("role"))) return "redirect:/dashboard";
+        try {
+            com.example.enrollment.grpc.UpdateCourseCapacityRequest req = com.example.enrollment.grpc.UpdateCourseCapacityRequest
+                    .newBuilder().setId(id).setCapacity(capacity).build();
+            courseStub.withDeadlineAfter(3, TimeUnit.SECONDS).updateCourseCapacity(req);
+            redirectAttributes.addFlashAttribute("successMessage", "Capacity updated");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed: " + e.getMessage());
+        }
+        return "redirect:/admin/courses/capacity";
     }
 
     @PostMapping("/grades/drop")
