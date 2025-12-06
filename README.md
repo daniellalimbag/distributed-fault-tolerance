@@ -1,5 +1,11 @@
 # Enrollment gRPC System – Architecture and Setup
 
+## Authors
+- GOMEZ, Dominic Joel
+- LIMBAG, Daniella Franxene
+- REYES, Ma. Julianna Re-an
+- SANTOS, Montgomery Joseph
+
 ## Overview
 A microservices-based enrollment system built with Spring Boot, gRPC, PostgreSQL, and a web UI (Thymeleaf). Services communicate via gRPC; the web-node acts as the UI gateway. Authentication is JWT-based with an HMAC secret shared across services.
 
