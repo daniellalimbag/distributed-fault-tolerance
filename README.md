@@ -44,6 +44,20 @@ Capacity governs whether a course is "open" (current < capacity) or "closed" (>=
   - grade-service: 9093
 - All gRPC calls are PLAINTEXT inside the Docker network (consider TLS or VPN for untrusted networks).
 
+## Setup Requirements
+Before running the project, ensure the following are installed:
+1. Java
+  - Windows: Download from Oracle, set JAVA_HOME, and add to PATH
+  - MacOS: `brew install open` and follow instructions to set JAVA_HOME
+2. grpcurl
+  - Windows: Download the binary from grpcurl releases and add it to PATH
+  - MacOS: `brew install grpcurl`
+3. Docker
+  - Windows & MacOs: Install Docker Desktop and ensure it's running
+4. Gradle
+  - Windows: Download from Gradle releases and add to PATH
+  - MacOs: `brew install gradle`
+
 ## Docker Compose (local, single host)
 - Build all services:
   - `gradle :auth-enrollment-service:bootJar :course-service:bootJar :grade-service:bootJar :web-node:bootJar`
