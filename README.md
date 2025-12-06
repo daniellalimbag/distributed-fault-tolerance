@@ -60,9 +60,12 @@ Environment (excerpt from compose):
 ## Database & Migrations
 - Flyway runs in auth-enrollment-service.
 - Migrations:
-  - V1__init.sql: base schema + seed (users/courses/enrollments)
-  - V2__add_capacity.sql: capacity column, seed capacities
-  - V3__add_user_password.sql: password column for users
+  - V1__init.sql: Sets up the core schema (users, courses, enrollments) with relationships, and seeds initial data including default users, sample courses, and a starter enrollment
+  - V2__add_capacity.sql: Adds a capacity column to the course table and seeds initial capacity values for existing courses
+  - V3__add_user_password.sql: Introduces a password column to the users table to support credential-based login, with a safe default for existing records
+  - V4__add_admin.sql: Seeds a default admin account with a pre-hashed password, ensuring it's created only if it doesn't already exist
+  - V5__enrollment_completion.sql: Adds term, academic year, and completion timestamp fields to enrollments, and creates an index to optimize course/term/year queries
+  - V6__course_completion_flag.sql: Adds term, academic year, and completion timestamp fields to courses to track course-level completion even without enrollments
 - Only one migration per version. If duplicates exist, delete/rename to maintain unique versioning.
 
 ## Development (without Docker)
